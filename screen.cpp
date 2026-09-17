@@ -64,14 +64,7 @@ void Screen::draw_mode4(Memory::address addr, uint8_t line, uint8_t word) {
 	for (int i = 0; i < 8; i++) {
 		uint8_t bit = 0x80 >> i;
 		bool g = green & bit, r = red & bit;
-		uint16_t col;
-
-		if (!g && !r) col = BLACK;
-		else if (g & !r) col = GREEN;
-		else if (!g && r) col = RED;
-		else if (g && r) col = WHITE;
-
-		_dsp.drawPixel(x + i, line, col);
+		_dsp.drawPixel(x + i, line, (g == r)? (g? WHITE: BLACK): (g? GREEN: RED));
 	}
 }
 
@@ -110,11 +103,16 @@ void Screen::draw_mode8(Memory::address addr, uint8_t line, uint8_t word) {
 void Screen::set_mode(uint8_t mode) {
 	if (mode & 0x02)
 		_dsp.clear();
-	_mode4 = (mode & 0x08);
+
+	bool mode4 = _mode4;
+	_mode4 = !(mode & 0x08);
+	if (mode4 != _mode4)
+		_dsp.setScreen(_mode4? 512: 256, 256);
 
 	bool screen2 = _screen2;
 	_screen2 = (mode & 0x80);
-	if (screen2 != _screen2) redraw();
+	if (screen2 != _screen2)
+		redraw();
 }
 
 void Screen::begin() {
