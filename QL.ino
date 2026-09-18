@@ -12,8 +12,11 @@ prom qdos(jsrom, sizeof(jsrom));
 Memory memory;
 m68k cpu(memory);
 Arduino machine(cpu);
-IO io;
+hw_serial_kbd kbd(Serial);
+IO io(cpu, kbd);
 Screen screen;
+
+bool debug_cpu = false;
 
 void setup() {
 
@@ -28,6 +31,8 @@ void setup() {
 	memory.put(screen, 0x20000);
 	memory.put(user_ram, 0x28000);
 
+	machine.set_cpu_debugging([]() { return debug_cpu; });
+	machine.register_pollable(io);
 	machine.reset();
 }
 
