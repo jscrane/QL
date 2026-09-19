@@ -19,41 +19,54 @@ void IO::operator=(uint8_t b) {
 			_display_ctrl(b);
 		break;
 	case IPC_LINK_CTRL:
-		if (_receive_mode) {
-			_send = 0;
-			_cmd = (_cmd << 1) + (b == 0x0e);
-			if (_cmd_bits++ == 4)
-				link_command(_cmd);
-		} else if (b == 0x0e) {
-			bool bit = _rsp & (0x80 >> _rsp_bits);
-			DBG("rsp %d %02x", bit, (0x80 >> _rsp_bits));
-			_send = bit? 0x80: 0x00;
-			if (++_rsp_bits == 8) {
-				_receive_mode = true;
-				_cmd_bits = 0;
-				_cmd = 0;
-				DBG_EMU("sent %02x", _rsp);
-			}
-		}
+		if (_ipc_state == IPCState::Command && (b == 0x0c || b == 0x0e))
+			receive_command_bit(b);
+		else if (b == 0x0e)
+			send_response_bit(b);
 		break;
+	}
+}
+
+void IO::receive_command_bit(uint8_t b) {
+	_send = 0;
+	DBG_EMU("cmd bit %d: %02x", _cmd_bits, b);
+	_cmd = (_cmd << 1) + (b == 0x0e);
+	if (++_cmd_bits == 4) {
+		uint8_t cmd = _cmd;
+		_cmd = 0;
+		_cmd_bits = 0;
+		link_command(cmd);
+	}
+}
+
+void IO::send_response_bit(uint8_t b) {
+	bool bit = _rsp & (0x80 >> _rsp_bits);
+	DBG("rsp %d %02x", bit, (0x80 >> _rsp_bits));
+	_send = bit? 0x80: 0x00;
+	if (++_rsp_bits == 8) {
+		_ipc_state = IPCState::Command;
+		DBG_EMU("sent %02x", _rsp);
+
+//		extern bool debug_cpu;
+//		debug_cpu = true;
 	}
 }
 
 void IO::link_command(uint8_t cmd) {
 
-	DBG_EMU("link_command %1x", cmd);
+	DBG_EMU("link_command %02x", cmd);
 
 	switch (cmd) {
 	case 1:
-		_receive_mode = false;
-		_rsp = 0x40 | (_has_key? 1: 0);
+		_ipc_state = IPCState::Response;
 		_rsp_bits = 0;
-
-		extern bool debug_cpu;
-		debug_cpu = true;
+		_rsp = 0x40 | (_has_key? 1: 0);
 		break;
 	case 8:
-		// FIXME: return keyboard byte
+		_ipc_state = IPCState::Response;
+		_rsp_bits = 0;
+		_rsp = 0x01;	// "F1 down"
+		_has_key = false;
 		break;
 	}
 }

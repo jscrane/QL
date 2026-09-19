@@ -38,16 +38,23 @@ private:
 
 	uint8_t interrupt_status();
 	void link_command(uint8_t);
+	void receive_command_bit(uint8_t);
+	void send_response_bit(uint8_t);
 
 	m68k &_cpu;
 	serial_kbd &_kbd;
+
+	enum IPCState {
+		Command, Response
+	};
+
+	IPCState _ipc_state = Command;
 
 	bool _has_key;
 	uint8_t _key;
 
 	uint8_t _cmd = 0, _rsp = 0;
 	uint8_t _cmd_bits = 0, _rsp_bits = 0;
-	bool _receive_mode = true;
 	uint8_t _send = 0;
 
 	bool _debugging = false;
