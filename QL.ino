@@ -3,6 +3,7 @@
 #include <dram.h>
 
 #include "jsrom.h"
+#include "keyboard.h"
 #include "io.h"
 #include "screen.h"
 
@@ -12,8 +13,8 @@ prom qdos(jsrom, sizeof(jsrom));
 Memory memory;
 m68k cpu(memory);
 Arduino machine(cpu);
-hw_serial_kbd kbd(Serial);
-IO io(cpu, kbd);
+Keyboard keyboard(Serial);
+IO io(cpu, keyboard);
 Screen screen;
 
 bool debug_cpu = false;

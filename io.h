@@ -2,7 +2,7 @@
 
 class IO: public Memory::Device, public Pollable {
 public:
-	IO(m68k &cpu, serial_kbd &kbd): Memory::Device(0x10000), _cpu(cpu), _kbd(kbd) {}
+	IO(m68k &cpu, Keyboard &kbd): Memory::Device(0x10000), _cpu(cpu), _kbd(kbd) {}
 
 	void operator=(uint8_t) override;
 	operator uint8_t() override;
@@ -42,7 +42,7 @@ private:
 	void send_response_bit(uint8_t);
 
 	m68k &_cpu;
-	serial_kbd &_kbd;
+	Keyboard &_kbd;
 
 	enum IPCState {
 		Command, Response
@@ -50,13 +50,9 @@ private:
 
 	IPCState _ipc_state = Command;
 
-	bool _has_key;
-	uint8_t _key;
-
-	uint8_t _cmd = 0, _cmd_bits = 0;
-	uint8_t _rsp_bit = 0;
-	uint64_t _rsp;
-	uint8_t _comdata = 0;
+	uint8_t _cmd, _cmd_bits;
+	uint16_t _rsp, _rsp_bit;
+	uint8_t _comdata;
 
 	bool _debugging = false;
 };

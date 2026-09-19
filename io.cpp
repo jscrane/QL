@@ -1,9 +1,10 @@
 #include <cstdint>
+#include <HardwareSerial.h>
 
 #include <machine.h>
 #include <memory.h>
 #include <debugging.h>
-#include <serial_kbd.h>
+#include <keyboard.h>
 #include <CPU.h>
 #include <m68k.h>
 
@@ -25,6 +26,24 @@ void IO::operator=(uint8_t b) {
 			send_response_bit(b);
 		break;
 	}
+}
+
+IO::operator uint8_t() {
+
+	uint8_t b = 0;
+
+	switch (_acc) {
+	case INT_IPC_STAT:
+		b = interrupt_status();
+		break;
+	case MDV_RS_STAT:
+		b = _comdata;
+		break;
+	}
+
+	if (_debugging) DBG_EMU("< %06x %02x", _acc, b);
+
+	return b;
 }
 
 void IO::receive_command_bit(uint8_t b) {
@@ -58,45 +77,20 @@ void IO::link_command(uint8_t cmd) {
 	switch (cmd) {
 	case 1:
 		// response is 8 bits
-		_rsp_bit = (1 << 7);
-		_rsp = 0x40 | (_has_key? 1: 0);
+		_rsp_bit = 0x0080;
+		_rsp = 0x40 | (_kbd.available()? 1: 0);
 		break;
 	case 8:
-		// response is 4 + 8*num_keys
-		_rsp_bit = (1 << (3 + 0));
-		// FIXME: initialise the "buffer"
-		_rsp = 0x00;
-		_has_key = false;
+		// response is 16 bits
+		_rsp_bit = 0x8000;
+		_rsp = (_kbd.available() << 12) | (_kbd.modifiers() << 8) | _kbd.read();
 		break;
 	}
-}
-
-IO::operator uint8_t() {
-
-	uint8_t b = 0;
-
-	switch (_acc) {
-	case INT_IPC_STAT:
-		b = interrupt_status();
-		break;
-	case MDV_RS_STAT:
-		b = _comdata;
-		break;
-	}
-
-	if (_debugging) DBG_EMU("< %06x %02x", _acc, b);
-
-	return b;
 }
 
 void IO::poll() {
 
-	if (!_has_key)
-		_debugging = false;
-
 	if (_kbd.available()) {
-		_has_key = true;
-		_key = _kbd.read();
 		_cpu.set_interrupt_level(2);
 		_debugging = true;
 	}
@@ -105,7 +99,7 @@ void IO::poll() {
 uint8_t IO::interrupt_status() {
 	uint8_t status = 0;
 
-	if (_has_key)
+	if (_kbd.available())
 		status |= 0x02;
 
 	return status;
