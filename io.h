@@ -55,7 +55,7 @@ private:
 
 	uint8_t _cmd = 0, _rsp = 0;
 	uint8_t _cmd_bits = 0, _rsp_bits = 0;
-	uint8_t _send = 0;
+	uint8_t _comdata = 0;
 
 	bool _debugging = false;
 };

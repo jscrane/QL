@@ -28,7 +28,7 @@ void IO::operator=(uint8_t b) {
 }
 
 void IO::receive_command_bit(uint8_t b) {
-	_send = 0;
+
 	DBG_EMU("cmd bit %d: %02x", _cmd_bits, b);
 	_cmd = (_cmd << 1) + (b == 0x0e);
 	if (++_cmd_bits == 4) {
@@ -40,9 +40,10 @@ void IO::receive_command_bit(uint8_t b) {
 }
 
 void IO::send_response_bit(uint8_t b) {
+
 	bool bit = _rsp & (0x80 >> _rsp_bits);
-	DBG("rsp %d %02x", bit, (0x80 >> _rsp_bits));
-	_send = bit? 0x80: 0x00;
+	DBG_EMU("rsp %d %02x", bit, (0x80 >> _rsp_bits));
+	_comdata = bit? 0x80: 0x00;
 	if (++_rsp_bits == 8) {
 		_ipc_state = IPCState::Command;
 		DBG_EMU("sent %02x", _rsp);
@@ -80,7 +81,7 @@ IO::operator uint8_t() {
 		b = interrupt_status();
 		break;
 	case MDV_RS_STAT:
-		b = _send;
+		b = _comdata;
 		break;
 	}
 
