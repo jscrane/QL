@@ -41,32 +41,31 @@ void IO::receive_command_bit(uint8_t b) {
 
 void IO::send_response_bit(uint8_t b) {
 
-	bool bit = _rsp & (0x80 >> _rsp_bits);
-	DBG_EMU("rsp %d %02x", bit, (0x80 >> _rsp_bits));
+	bool bit = _rsp & _rsp_bit;
+	DBG_EMU("rsp %d %02x", bit, _rsp_bit);
 	_comdata = bit? 0x80: 0x00;
-	if (++_rsp_bits == 8) {
+	_rsp_bit >>= 1;
+	if (_rsp_bit == 0)
 		_ipc_state = IPCState::Command;
-		DBG_EMU("sent %02x", _rsp);
-
-//		extern bool debug_cpu;
-//		debug_cpu = true;
-	}
 }
 
 void IO::link_command(uint8_t cmd) {
 
 	DBG_EMU("link_command %02x", cmd);
 
+	_ipc_state = IPCState::Response;
+
 	switch (cmd) {
 	case 1:
-		_ipc_state = IPCState::Response;
-		_rsp_bits = 0;
+		// response is 8 bits
+		_rsp_bit = (1 << 7);
 		_rsp = 0x40 | (_has_key? 1: 0);
 		break;
 	case 8:
-		_ipc_state = IPCState::Response;
-		_rsp_bits = 0;
-		_rsp = 0x01;	// "F1 down"
+		// response is 4 + 8*num_keys
+		_rsp_bit = (1 << (3 + 0));
+		// FIXME: initialise the "buffer"
+		_rsp = 0x00;
 		_has_key = false;
 		break;
 	}

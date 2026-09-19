@@ -53,8 +53,9 @@ private:
 	bool _has_key;
 	uint8_t _key;
 
-	uint8_t _cmd = 0, _rsp = 0;
-	uint8_t _cmd_bits = 0, _rsp_bits = 0;
+	uint8_t _cmd = 0, _cmd_bits = 0;
+	uint8_t _rsp_bit = 0;
+	uint64_t _rsp;
 	uint8_t _comdata = 0;
 
 	bool _debugging = false;
