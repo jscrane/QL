@@ -44,6 +44,18 @@ IO::operator uint8_t() {
 	case MDV_RS_STAT:
 		b = _comdata;
 		break;
+	case RTC_BYTE0:
+		b = (_rtc >> 24) & 0xff;
+		break;
+	case RTC_BYTE1:
+		b = (_rtc >> 16) & 0xff;
+		break;
+	case RTC_BYTE2:
+		b = (_rtc >> 8) & 0xff;
+		break;
+	case RTC_BYTE3:
+		b = _rtc & 0xff;
+		break;
 	}
 
 	if (_debugging) DBG_EMU("< %06x %02x", _acc, b);
@@ -106,7 +118,10 @@ void IO::poll() {
 	if (_kbd.available())
 		_irq_status |= INT_IPC;
 
-	_cpu.set_interrupt_level(_irq_status? 2: 0);
+	bool gap = (_irq_status & INT_GAP) && (_irq_mask & IM_GAP);
+	bool ipc = (_irq_status & INT_IPC);
+
+	_cpu.set_interrupt_level(gap || ipc? 2: 0);
 }
 
 void IO::interrupt_acknowledge(uint8_t b) {
@@ -117,10 +132,8 @@ void IO::interrupt_acknowledge(uint8_t b) {
 }
 
 void IO::begin() {
-	_machine->interval_timer(20000, [this]() {
-		if (_irq_mask & IM_GAP)
-			_irq_status |= INT_GAP;
-	});
+	_machine->interval_timer(20000, [this]() { _irq_status |= INT_GAP; });
+	_machine->interval_timer(1000000, [this]() { _rtc++; });
 }
 
 void IO::checkpoint(Checkpoint &c) {

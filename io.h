@@ -65,15 +65,16 @@ private:
 	Keyboard &_kbd;
 
 	enum IPCState {
-		Start, Command, Response
-	};
-
-	IPCState _ipc_state = Start;
+		Start,
+		Command,
+		Response
+	} _ipc_state = Start;
 
 	uint8_t _cmd, _cmd_bits;
 	uint16_t _rsp, _rsp_bit;
 	uint8_t _comdata;
 	uint8_t _irq_status = 0, _irq_mask = 0;
+	uint32_t _rtc = 283996800;		// Monday 1st January 1979 00:00:00 UTC
 
 	bool _debugging = false;
 };
