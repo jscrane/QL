@@ -88,7 +88,6 @@ void IO::link_command(uint8_t cmd) {
 		if (_kbd.available()) {
 			// response is 16 bits
 			_rsp_bit = 0x8000;
-			//_rsp = (_kbd.available() << 12) | (_kbd.modifiers() << 8) | _kbd.read();
 			_rsp = (_kbd.available() << 12) | _kbd.read();
 		} else {
 			// response is 4 bits
