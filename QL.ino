@@ -26,6 +26,7 @@ void setup() {
 	screen.begin();
 
 	io.set_display_ctrl([](uint8_t b) { screen.set_mode(b); });
+	io.begin();
 
 	memory.put(qdos, 0x00000);
 	memory.put(io, 0x10000);
@@ -38,5 +39,6 @@ void setup() {
 }
 
 void loop() {
+
 	machine.run(1);
 }

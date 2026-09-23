@@ -1,13 +1,12 @@
 #include <cstdint>
-#include <HardwareSerial.h>
 
 #include <machine.h>
 #include <memory.h>
 #include <debugging.h>
-#include <keyboard.h>
 #include <CPU.h>
 #include <m68k.h>
 
+#include "keyboard.h"
 #include "io.h"
 
 void IO::operator=(uint8_t b) {
@@ -25,6 +24,9 @@ void IO::operator=(uint8_t b) {
 		else if (b == 0x0e)
 			send_response_bit(b);
 		break;
+	case INT_CTRL:
+		interrupt_acknowledge(b);
+		break;
 	}
 }
 
@@ -34,7 +36,7 @@ IO::operator uint8_t() {
 
 	switch (_acc) {
 	case INT_IPC_STAT:
-		b = interrupt_status();
+		b = _irq_status;
 		break;
 	case MDV_RS_STAT:
 		b = _comdata;
@@ -45,6 +47,8 @@ IO::operator uint8_t() {
 
 	return b;
 }
+
+extern bool debug_cpu;
 
 void IO::receive_command_bit(uint8_t b) {
 
@@ -78,31 +82,42 @@ void IO::link_command(uint8_t cmd) {
 	case 1:
 		// response is 8 bits
 		_rsp_bit = 0x0080;
-		_rsp = 0x40 | (_kbd.available()? 1: 0);
+		_rsp = 0x40 | _kbd.available();
+		debug_cpu = _kbd.available();
 		break;
 	case 8:
-		// response is 16 bits
-		_rsp_bit = 0x8000;
-		_rsp = (_kbd.available() << 12) | (_kbd.modifiers() << 8) | _kbd.read();
+		if (_kbd.available()) {
+			// response is 16 bits
+			_rsp_bit = 0x8000;
+			_rsp = (_kbd.available() << 12) | (_kbd.modifiers() << 8) | _kbd.read();
+		} else {
+			// response is 4 bits
+			_rsp_bit = 0x0008;
+			_rsp = 0;
+		}
 		break;
 	}
 }
 
 void IO::poll() {
 
-	if (_kbd.available()) {
-		_cpu.set_interrupt_level(2);
-		_debugging = true;
-	}
+	if (_kbd.available())
+		_irq_status |= INT_IPC;
+
+	_cpu.set_interrupt_level(_irq_status? 2: 0);
+
+//	if (_irq_status)
+//		_debugging = true;
 }
 
-uint8_t IO::interrupt_status() {
-	uint8_t status = 0;
+void IO::interrupt_acknowledge(uint8_t b) {
 
-	if (_kbd.available())
-		status |= 0x02;
+	if (b & INT_IPC)
+		_irq_status &= ~INT_IPC;
+}
 
-	return status;
+void IO::begin() {
+//	_machine->interval_timer(2000000, [this]() { _tick = true; });
 }
 
 void IO::checkpoint(Checkpoint &c) {

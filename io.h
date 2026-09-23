@@ -3,6 +3,7 @@
 class IO: public Memory::Device, public Pollable {
 public:
 	IO(m68k &cpu, Keyboard &kbd): Memory::Device(0x10000), _cpu(cpu), _kbd(kbd) {}
+	void begin();
 
 	void operator=(uint8_t) override;
 	operator uint8_t() override;
@@ -34,9 +35,19 @@ private:
 	static constexpr uint16_t MDV_DATA_TRK1 = 0x8022;
 	static constexpr uint16_t MDV_DATA_TRK2 = 0x8023;
 
+	// interrupt bits for 0x8021
+	static constexpr uint8_t INT_BAUD = (1 << 7);
+	static constexpr uint8_t INT_MDI  = (1 << 6);
+	static constexpr uint8_t INT_RTC  = (1 << 5);
+	static constexpr uint8_t INT_EXT  = (1 << 4);
+	static constexpr uint8_t INT_GAP  = (1 << 3);
+	static constexpr uint8_t INT_TX   = (1 << 2);
+	static constexpr uint8_t INT_IPC  = (1 << 1);
+	static constexpr uint8_t INT_MDG  = (1 << 0);
+
 	std::function<void(uint8_t)> _display_ctrl;
 
-	uint8_t interrupt_status();
+	void interrupt_acknowledge(uint8_t);
 	void link_command(uint8_t);
 	void receive_command_bit(uint8_t);
 	void send_response_bit(uint8_t);
@@ -53,6 +64,7 @@ private:
 	uint8_t _cmd, _cmd_bits;
 	uint16_t _rsp, _rsp_bit;
 	uint8_t _comdata;
+	uint8_t _irq_status = 0;
 
 	bool _debugging = false;
 };

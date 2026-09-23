@@ -1,0 +1,99 @@
+Sinclair QL keycode table       Till Harbaum            V1.0 - 08/04/2015
+-------------------------------------------------------------------------
+
+This table shows how the 64 keys of the Sinclair QL are wired and how their
+codes on IPC cmd 8 and 9 are derived.
+
+http://www.sinclairql.net/srv/keyboard_format.png
+
+Example
+
+E.g. pressing the Q key on a UK keyboard connects Pin 2 of J11 with Pin 4 of
+J12. This is the key in row 1 and column 3. On IPC command 8 the 8049 will
+respond with $0b for this key (8*1+3 = 11 = $0b). A Command 9 request for 
+row 6 will return 8 (2^3 = 8).
+
++------------------- row (request to cmd 9 is 7-row)
+|  +---------------- J11 (pin connected to J12 when pressed)
+|  |  +------------- column (reply to cmd 9 is 2^column)
+|  |  |  +---------- J12 (pin connected to J11 when pressed)
+|  |  |  |  +------- keycode returned by IPC Command 8 (= 8*row+column)
+|  |  |  |  |
+|  |  |  |  |     +- key label on UK keyboard
+|  |  |  |  |     |
+
+   9     1        CTRL, reported in bit 1 of cmd 8 modifier bits
+   9     2        SHIFT, reported in bit 2 of cmd 8 modifier bits
+   9    11        ALT, reported in bit 0 of cmd 8 modifier bits
+
+0  7  0  9        <unused> SHIFT is mapped here in cmd 9 reply
+0  7  1  3        <unused> CTRL is mapped here in cmd 9 reply
+0  7  2  7        <unused> ALT is mapped here in cmd 9 reply
+0  7  3  4 03     x
+0  7  4  5 04     v
+0  7  5 10 05     /
+0  7  6  6 06     n
+0  7  7  8 07     ,
+
+1  2  0  9 08     8
+1  2  1  3 09     2
+1  2  2  7 0A     6
+1  2  3  4 0B     q
+1  2  4  5 0C     e
+1  2  5 10 0D     0
+1  2  6  6 0E     t
+1  2  7  8 0F     u
+
+2  3  0  9 10     9
+2  3  1  3 11     w
+2  3  2  7 12     i
+2  3  3  4 13     TAB
+2  3  4  5 14     r
+2  3  5 10 15     -
+2  3  6  6 16     y
+2  3  7  8 17     o
+
+3  4  0  9 18     l
+3  4  1  3 19     3
+3  4  2  7 1A     h
+3  4  3  4 1B     1
+3  4  4  5 1C     a
+3  4  5 10 1D     p
+3  4  6  6 1E     d
+3  4  7  8 1F     j
+
+4  5  0  9 20     [
+4  5  1  3 21     CAPS
+4  5  2  7 22     k
+4  5  3  4 23     s
+4  5  4  5 24     f
+4  5  5 10 25     =
+4  5  6  6 26     g
+4  5  7  8 27     ;
+
+5  6  0  9 28     ]
+5  6  1  3 29     z
+5  6  2  7 2A     .
+5  6  3  4 2B     c
+5  6  4  5 2C     b
+5  6  5 10 2D     Pound
+5  6  6  6 2E     m
+5  6  7  8 2F     '
+
+6  8  0  9 30     RET
+6  8  1  3 31     Left
+6  8  2  7 32     Up
+6  8  3  4 33     ESC
+6  8  4  5 34     Right
+6  8  5 10 35     \
+6  8  6  6 36     SPACE
+6  8  7  8 37     Down
+
+7  1  0  9 38     F4
+7  1  1  3 39     F1
+7  1  2  7 3A     5
+7  1  3  4 3B     F2
+7  1  4  5 3C     F3
+7  1  5 10 3D     F5
+7  1  6  6 3E     4
+7  1  7  8 3F     7
