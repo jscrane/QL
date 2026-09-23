@@ -45,6 +45,15 @@ private:
 	static constexpr uint8_t INT_IPC  = (1 << 1);
 	static constexpr uint8_t INT_MDG  = (1 << 0);
 
+	static constexpr uint8_t IM_RTC = (1 << 7);
+	static constexpr uint8_t IM_EXT = (1 << 6);
+	static constexpr uint8_t IM_GAP = (1 << 5);
+	static constexpr uint8_t IC_EXT  = INT_EXT;
+	static constexpr uint8_t IC_GAP  = INT_GAP;
+	static constexpr uint8_t IC_TX   = INT_TX;
+	static constexpr uint8_t IC_IPC  = INT_IPC;
+	static constexpr uint8_t IC_MDG  = INT_MDG;
+
 	std::function<void(uint8_t)> _display_ctrl;
 
 	void interrupt_acknowledge(uint8_t);
@@ -64,7 +73,7 @@ private:
 	uint8_t _cmd, _cmd_bits;
 	uint16_t _rsp, _rsp_bit;
 	uint8_t _comdata;
-	uint8_t _irq_status = 0;
+	uint8_t _irq_status = 0, _irq_mask = 0;
 
 	bool _debugging = false;
 };

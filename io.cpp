@@ -52,7 +52,7 @@ extern bool debug_cpu;
 
 void IO::receive_command_bit(uint8_t b) {
 
-	DBG_EMU("cmd bit %d: %02x", _cmd_bits, b);
+	if (_debugging) DBG_EMU("cmd bit %d: %02x", _cmd_bits, b);
 	_cmd = (_cmd << 1) + (b == 0x0e);
 	if (++_cmd_bits == 4) {
 		uint8_t cmd = _cmd;
@@ -65,7 +65,7 @@ void IO::receive_command_bit(uint8_t b) {
 void IO::send_response_bit(uint8_t b) {
 
 	bool bit = _rsp & _rsp_bit;
-	DBG_EMU("rsp %d %02x", bit, _rsp_bit);
+	if (_debugging) DBG_EMU("rsp %d %02x", bit, _rsp_bit);
 	_comdata = bit? 0x80: 0x00;
 	_rsp_bit >>= 1;
 	if (_rsp_bit == 0)
@@ -74,7 +74,7 @@ void IO::send_response_bit(uint8_t b) {
 
 void IO::link_command(uint8_t cmd) {
 
-	DBG_EMU("link_command %02x", cmd);
+	if (_debugging) DBG_EMU("link_command %02x", cmd);
 
 	_ipc_state = IPCState::Response;
 
@@ -83,13 +83,13 @@ void IO::link_command(uint8_t cmd) {
 		// response is 8 bits
 		_rsp_bit = 0x0080;
 		_rsp = 0x40 | _kbd.available();
-		debug_cpu = _kbd.available();
 		break;
 	case 8:
 		if (_kbd.available()) {
 			// response is 16 bits
 			_rsp_bit = 0x8000;
-			_rsp = (_kbd.available() << 12) | (_kbd.modifiers() << 8) | _kbd.read();
+			//_rsp = (_kbd.available() << 12) | (_kbd.modifiers() << 8) | _kbd.read();
+			_rsp = (_kbd.available() << 12) | _kbd.read();
 		} else {
 			// response is 4 bits
 			_rsp_bit = 0x0008;
@@ -105,19 +105,20 @@ void IO::poll() {
 		_irq_status |= INT_IPC;
 
 	_cpu.set_interrupt_level(_irq_status? 2: 0);
-
-//	if (_irq_status)
-//		_debugging = true;
 }
 
 void IO::interrupt_acknowledge(uint8_t b) {
 
-	if (b & INT_IPC)
-		_irq_status &= ~INT_IPC;
+	// bits 7-5 are the interrupt mask, bits 4-0 clear pending interrupts
+	_irq_mask = b & 0xe0;
+	_irq_status &= ~(b & 0x1f);
 }
 
 void IO::begin() {
-//	_machine->interval_timer(2000000, [this]() { _tick = true; });
+	_machine->interval_timer(20000, [this]() {
+		if (_irq_mask & IM_GAP)
+			_irq_status |= INT_GAP;
+	});
 }
 
 void IO::checkpoint(Checkpoint &c) {
