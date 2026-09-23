@@ -19,7 +19,10 @@ void IO::operator=(uint8_t b) {
 			_display_ctrl(b);
 		break;
 	case IPC_LINK_CTRL:
-		if (_ipc_state == IPCState::Command && (b == 0x0c || b == 0x0e))
+		if (_ipc_state == IPCState::Start) {
+			if (b == 0x01)
+				_ipc_state = IPCState::Command;
+		} else if (_ipc_state == IPCState::Command)
 			receive_command_bit(b);
 		else if (b == 0x0e)
 			send_response_bit(b);

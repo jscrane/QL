@@ -65,10 +65,10 @@ private:
 	Keyboard &_kbd;
 
 	enum IPCState {
-		Command, Response
+		Start, Command, Response
 	};
 
-	IPCState _ipc_state = Command;
+	IPCState _ipc_state = Start;
 
 	uint8_t _cmd, _cmd_bits;
 	uint16_t _rsp, _rsp_bit;
