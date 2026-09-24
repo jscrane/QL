@@ -144,9 +144,7 @@ void IO::interrupt_acknowledge(uint8_t b) {
 
 void IO::begin() {
 	_machine->interval_timer(20000, [this]() { _irq_status |= INT_FRAME; });
-	/*
 	_machine->interval_timer(1000000, [this]() { _rtc++; });
-	*/
 }
 
 void IO::checkpoint(Checkpoint &c) {
