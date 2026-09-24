@@ -36,23 +36,15 @@ private:
 	static constexpr uint16_t MDV_DATA_TRK2 = 0x8023;
 
 	// interrupt bits for 0x8021
-	static constexpr uint8_t INT_BAUD = (1 << 7);
-	static constexpr uint8_t INT_MDI  = (1 << 6);
-	static constexpr uint8_t INT_RTC  = (1 << 5);
-	static constexpr uint8_t INT_EXT  = (1 << 4);
-	static constexpr uint8_t INT_GAP  = (1 << 3);
-	static constexpr uint8_t INT_TX   = (1 << 2);
-	static constexpr uint8_t INT_IPC  = (1 << 1);
-	static constexpr uint8_t INT_MDG  = (1 << 0);
+	static constexpr uint8_t INT_EXTERNAL = (1 << 4);
+	static constexpr uint8_t INT_FRAME = (1 << 3);
+	static constexpr uint8_t INT_TRANSMIT = (1 << 2);
+	static constexpr uint8_t INT_INTERFACE = (1 << 1);
+	static constexpr uint8_t INT_GAP = (1 << 0);
 
-	static constexpr uint8_t IM_RTC = (1 << 7);
-	static constexpr uint8_t IM_EXT = (1 << 6);
-	static constexpr uint8_t IM_GAP = (1 << 5);
-	static constexpr uint8_t IC_EXT  = INT_EXT;
-	static constexpr uint8_t IC_GAP  = INT_GAP;
-	static constexpr uint8_t IC_TX   = INT_TX;
-	static constexpr uint8_t IC_IPC  = INT_IPC;
-	static constexpr uint8_t IC_MDG  = INT_MDG;
+	static constexpr uint8_t MASK_TRANSMIT  = (1 << 7);
+	static constexpr uint8_t MASK_INTERFACE = (1 << 6);
+	static constexpr uint8_t MASK_GAP = (1 << 5);
 
 	std::function<void(uint8_t)> _display_ctrl;
 
@@ -75,6 +67,4 @@ private:
 	uint8_t _comdata;
 	uint8_t _irq_status = 0, _irq_mask = 0;
 	uint32_t _rtc = 283996800;		// Monday 1st January 1979 00:00:00 UTC
-
-	bool _debugging = false;
 };

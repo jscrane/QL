@@ -9,9 +9,11 @@
 #include "keyboard.h"
 #include "io.h"
 
+bool debug_io = false;
+
 void IO::operator=(uint8_t b) {
 
-	if (_debugging) DBG_EMU("> %06x %02x", _acc, b);
+	if (debug_io) DBG_EMU("> %06x %02x", _acc, b);
 
 	switch (_acc) {
 	case DISPLAY_CTRL:
@@ -29,6 +31,9 @@ void IO::operator=(uint8_t b) {
 		break;
 	case INT_CTRL:
 		interrupt_acknowledge(b);
+		break;
+	default:
+		DBG_EMU("> %06x %02x", _acc, b);
 		break;
 	}
 }
@@ -56,9 +61,12 @@ IO::operator uint8_t() {
 	case RTC_BYTE3:
 		b = _rtc & 0xff;
 		break;
+	default:
+		DBG_EMU("< %06x", _acc);
+		break;
 	}
 
-	if (_debugging) DBG_EMU("< %06x %02x", _acc, b);
+	if (debug_io) DBG_EMU("< %06x %02x", _acc, b);
 
 	return b;
 }
@@ -67,7 +75,7 @@ extern bool debug_cpu;
 
 void IO::receive_command_bit(uint8_t b) {
 
-	if (_debugging) DBG_EMU("cmd bit %d: %02x", _cmd_bits, b);
+	if (debug_io) DBG_EMU("cmd bit %d: %02x", _cmd_bits, b);
 	_cmd = (_cmd << 1) + (b == 0x0e);
 	if (++_cmd_bits == 4) {
 		uint8_t cmd = _cmd;
@@ -80,7 +88,7 @@ void IO::receive_command_bit(uint8_t b) {
 void IO::send_response_bit(uint8_t b) {
 
 	bool bit = _rsp & _rsp_bit;
-	if (_debugging) DBG_EMU("rsp %d %02x", bit, _rsp_bit);
+	if (debug_io) DBG_EMU("rsp %d %02x", bit, _rsp_bit);
 	_comdata = bit? 0x80: 0x00;
 	_rsp_bit >>= 1;
 	if (_rsp_bit == 0)
@@ -89,7 +97,7 @@ void IO::send_response_bit(uint8_t b) {
 
 void IO::link_command(uint8_t cmd) {
 
-	if (_debugging) DBG_EMU("link_command %02x", cmd);
+	if (debug_io) DBG_EMU("link_command %02x", cmd);
 
 	_ipc_state = IPCState::Response;
 
@@ -103,12 +111,15 @@ void IO::link_command(uint8_t cmd) {
 		if (_kbd.available()) {
 			// response is 16 bits
 			_rsp_bit = 0x8000;
-			_rsp = (_kbd.available() << 12) | _kbd.read();
+			_rsp = (1 << 12) | _kbd.read();
 		} else {
 			// response is 4 bits
 			_rsp_bit = 0x0008;
 			_rsp = 0;
 		}
+		break;
+	default:
+		DBG_EMU("unimplemented link_command %02x", cmd);
 		break;
 	}
 }
@@ -116,12 +127,12 @@ void IO::link_command(uint8_t cmd) {
 void IO::poll() {
 
 	if (_kbd.available())
-		_irq_status |= INT_IPC;
+		_irq_status |= INT_INTERFACE;
 
-	bool gap = (_irq_status & INT_GAP) && (_irq_mask & IM_GAP);
-	bool ipc = (_irq_status & INT_IPC);
+	bool frame = (_irq_status & INT_FRAME);
+	bool ipc = (_irq_status & INT_INTERFACE) && (_irq_mask & MASK_INTERFACE);
 
-	_cpu.set_interrupt_level(gap || ipc? 2: 0);
+	_cpu.set_interrupt_level(frame || ipc? 2: 0);
 }
 
 void IO::interrupt_acknowledge(uint8_t b) {
@@ -132,8 +143,10 @@ void IO::interrupt_acknowledge(uint8_t b) {
 }
 
 void IO::begin() {
-	_machine->interval_timer(20000, [this]() { _irq_status |= INT_GAP; });
+	_machine->interval_timer(20000, [this]() { _irq_status |= INT_FRAME; });
+	/*
 	_machine->interval_timer(1000000, [this]() { _rtc++; });
+	*/
 }
 
 void IO::checkpoint(Checkpoint &c) {
