@@ -81,8 +81,6 @@ IO::operator uint8_t() {
 	return b;
 }
 
-extern bool debug_cpu;
-
 void IO::receive_command_bit(uint8_t b) {
 
 	if (debug_io) DBG_EMU("cmd bit %d: %02x", _cmd_bits, b);
