@@ -15,6 +15,6 @@ public:
 private:
 	HardwareSerial &_serial;
 
-	uint8_t _head = 0, _tail = 0, _avail = 0;
-	uint16_t _buf[BUFFER_SIZE];
+	bool _avail;
+	uint16_t _code;
 };

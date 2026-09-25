@@ -27,30 +27,35 @@ static uint16_t keycodes[128] PROGMEM = {
 
 bool Keyboard::available() {
 
-	if (_avail == BUFFER_SIZE)
+	if (_avail)
 		return true;
 
 	while (_serial.available()) {
 		uint8_t key = _serial.read();
-		uint16_t code = pgm_read_word(&keycodes[key]);
-		DBG_EMU("%d %d %02x %04x", _head, _tail, key, code);
-		if (key > 0x7f || code == 0)
+
+		if (key > 0x7f)
 			continue;
 
-		_buf[_tail] = code;
-		if (++_tail == BUFFER_SIZE) _tail = 0;
-		if (++_avail == BUFFER_SIZE) break;
+		uint16_t code = pgm_read_word(&keycodes[key]);
+
+		DBG_EMU("%02x %04x", key, code);
+
+		if (code == 0)
+			continue;
+
+		_code = code;
+		_avail = true;
+		return true;
 	}
-	return _avail;
+
+	return false;
 }
 
 uint16_t Keyboard::read() {
 
-	if (_avail == 0)
+	if (!_avail)
 		return 0xffff;
 
-	_avail--;
-	uint16_t code = _buf[_head];
-	if (++_head == BUFFER_SIZE) _head = 0;
-	return code;
+	_avail = false;
+	return _code;
 }
