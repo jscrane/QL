@@ -14,7 +14,7 @@ Memory memory;
 m68k cpu(memory);
 Arduino machine(cpu);
 Keyboard keyboard(Serial);
-IO io(cpu, keyboard);
+IO io(keyboard);
 Screen screen;
 
 bool debug_cpu = false;
@@ -26,6 +26,7 @@ void setup() {
 	screen.begin();
 
 	io.set_display_ctrl([](uint8_t b) { screen.set_mode(b); });
+	io.set_interrupt_cpu([](bool b) { cpu.set_interrupt_level(b? 2: 0); });
 	io.begin();
 
 	memory.put(qdos, 0x00000);

@@ -2,7 +2,7 @@
 
 class IO: public Memory::Device, public Pollable {
 public:
-	IO(m68k &cpu, Keyboard &kbd): Memory::Device(0x10000), _cpu(cpu), _kbd(kbd) {}
+	IO(Keyboard &kbd): Memory::Device(0x10000), _kbd(kbd) {}
 	void begin();
 
 	void operator=(uint8_t) override;
@@ -14,6 +14,7 @@ public:
 	void poll() override;
 
 	void set_display_ctrl(std::function<void(uint8_t)> fn) { _display_ctrl = fn; }
+	void set_interrupt_cpu(std::function<void(bool)> fn) { _interrupt_cpu = fn; }
 private:
 	// write
 	static constexpr uint16_t RTC_RESET = 0x8000;
@@ -47,13 +48,13 @@ private:
 	static constexpr uint8_t MASK_GAP = (1 << 5);
 
 	std::function<void(uint8_t)> _display_ctrl;
+	std::function<void(bool)> _interrupt_cpu;
 
 	void interrupt_acknowledge(uint8_t);
 	void link_command(uint8_t);
 	void receive_command_bit(uint8_t);
 	void send_response_bit(uint8_t);
 
-	m68k &_cpu;
 	Keyboard &_kbd;
 
 	enum IPCState {

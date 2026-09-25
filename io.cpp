@@ -3,8 +3,6 @@
 #include <machine.h>
 #include <memory.h>
 #include <debugging.h>
-#include <CPU.h>
-#include <m68k.h>
 
 #include "keyboard.h"
 #include "io.h"
@@ -141,7 +139,8 @@ void IO::poll() {
 	bool ipc = (_irq_status & INT_INTERFACE) && (_irq_mask & MASK_INTERFACE);
 	bool gap = (_irq_status & INT_GAP) && (_irq_mask & MASK_GAP);
 
-	_cpu.set_interrupt_level(frame || ipc || gap? 2: 0);
+	if (_interrupt_cpu)
+		_interrupt_cpu(frame || ipc || gap);
 }
 
 void IO::interrupt_acknowledge(uint8_t b) {
