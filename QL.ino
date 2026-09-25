@@ -4,6 +4,7 @@
 
 #include "jsrom.h"
 #include "keyboard.h"
+#include "microdrive.h"
 #include "io.h"
 #include "screen.h"
 
