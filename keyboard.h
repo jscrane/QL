@@ -2,8 +2,6 @@
 
 class HardwareSerial;
 
-#define BUFFER_SIZE	16
-
 class Keyboard {
 public:
 	Keyboard(HardwareSerial &serial): _serial(serial) {}
