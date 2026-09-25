@@ -1,8 +1,9 @@
 #pragma once
 
-class IO: public Memory::Device {
+class IO: public Memory::Device, public Pollable {
 public:
-	IO(): Memory::Device(0x10000) {}
+	IO(Keyboard &kbd): Memory::Device(0x10000), _kbd(kbd) {}
+	void begin();
 
 	void operator=(uint8_t) override;
 	operator uint8_t() override;
@@ -10,7 +11,10 @@ public:
 	void checkpoint(Checkpoint &) override;
 	void restore(Checkpoint &) override;
 
+	void poll() override;
+
 	void set_display_ctrl(std::function<void(uint8_t)> fn) { _display_ctrl = fn; }
+	void set_interrupt_cpu(std::function<void(bool)> fn) { _interrupt_cpu = fn; }
 private:
 	// write
 	static constexpr uint16_t RTC_RESET = 0x8000;
@@ -32,5 +36,36 @@ private:
 	static constexpr uint16_t MDV_DATA_TRK1 = 0x8022;
 	static constexpr uint16_t MDV_DATA_TRK2 = 0x8023;
 
+	// interrupt bits for 0x8021
+	static constexpr uint8_t INT_EXTERNAL = (1 << 4);
+	static constexpr uint8_t INT_FRAME = (1 << 3);
+	static constexpr uint8_t INT_TRANSMIT = (1 << 2);
+	static constexpr uint8_t INT_INTERFACE = (1 << 1);
+	static constexpr uint8_t INT_GAP = (1 << 0);
+
+	static constexpr uint8_t MASK_TRANSMIT  = (1 << 7);
+	static constexpr uint8_t MASK_INTERFACE = (1 << 6);
+	static constexpr uint8_t MASK_GAP = (1 << 5);
+
 	std::function<void(uint8_t)> _display_ctrl;
+	std::function<void(bool)> _interrupt_cpu;
+
+	void interrupt_acknowledge(uint8_t);
+	void link_command(uint8_t);
+	void receive_command_bit(uint8_t);
+	void send_response_bit(uint8_t);
+
+	Keyboard &_kbd;
+
+	enum IPCState {
+		Start,
+		Command,
+		Response
+	} _ipc_state = Start;
+
+	uint8_t _cmd, _cmd_bits;
+	uint16_t _rsp, _rsp_bit;
+	uint8_t _comdata;
+	uint8_t _irq_status = 0, _irq_mask = 0, _mdv_ctrl = 0;
+	uint32_t _rtc = 0;
 };

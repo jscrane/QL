@@ -107,7 +107,7 @@ void Screen::set_mode(uint8_t mode) {
 	bool mode4 = _mode4;
 	_mode4 = !(mode & 0x08);
 	if (mode4 != _mode4)
-		_dsp.setScreen(_mode4? 512: 256, 256);
+		_dsp.setScreen(_mode4? 512: 256, 256 /* , CENTER_ALL */);
 
 	bool screen2 = _screen2;
 	_screen2 = (mode & 0x80);
