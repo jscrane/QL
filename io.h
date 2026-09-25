@@ -65,6 +65,6 @@ private:
 	uint8_t _cmd, _cmd_bits;
 	uint16_t _rsp, _rsp_bit;
 	uint8_t _comdata;
-	uint8_t _irq_status = 0, _irq_mask = 0;
-	uint32_t _rtc = 283996800;		// Monday 1st January 1979 00:00:00 UTC
+	uint8_t _irq_status = 0, _irq_mask = 0, _mdv_ctrl = 0;
+	uint32_t _rtc = 0;
 };

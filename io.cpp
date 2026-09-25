@@ -32,6 +32,16 @@ void IO::operator=(uint8_t b) {
 	case INT_CTRL:
 		interrupt_acknowledge(b);
 		break;
+	case MDV_CTRL:
+		if (_mdv_ctrl == 0x03 && b == 0x01) {
+			// MDV1 selected, no cartridge: drive is effectively a gap
+			_irq_status |= INT_GAP;
+		}
+		_mdv_ctrl = b;
+		break;
+	case TRANSMIT_CTRL:
+		// ignore for now...
+		break;
 	default:
 		DBG_EMU("> %06x %02x", _acc, b);
 		break;
@@ -131,8 +141,9 @@ void IO::poll() {
 
 	bool frame = (_irq_status & INT_FRAME);
 	bool ipc = (_irq_status & INT_INTERFACE) && (_irq_mask & MASK_INTERFACE);
+	bool gap = (_irq_status & INT_GAP) && (_irq_mask & MASK_GAP);
 
-	_cpu.set_interrupt_level(frame || ipc? 2: 0);
+	_cpu.set_interrupt_level(frame || ipc || gap? 2: 0);
 }
 
 void IO::interrupt_acknowledge(uint8_t b) {
