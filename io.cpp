@@ -5,6 +5,7 @@
 #include <debugging.h>
 
 #include "keyboard.h"
+#include "microdrive.h"
 #include "io.h"
 
 bool debug_io = false;
@@ -31,11 +32,7 @@ void IO::operator=(uint8_t b) {
 		interrupt_acknowledge(b);
 		break;
 	case MDV_CTRL:
-		if (_mdv_ctrl == 0x03 && b == 0x01) {
-			// MDV1 selected, no cartridge: drive is effectively a gap
-			_irq_status |= INT_GAP;
-		}
-		_mdv_ctrl = b;
+		_mdv.write_control(b);
 		break;
 	case TRANSMIT_CTRL:
 		// ignore for now...
@@ -134,6 +131,9 @@ void IO::poll() {
 
 	if (_kbd.available())
 		_irq_status |= INT_INTERFACE;
+
+	if (_mdv.gap())
+		_irq_status |= INT_GAP;
 
 	bool frame = (_irq_status & INT_FRAME);
 	bool ipc = (_irq_status & INT_INTERFACE) && (_irq_mask & MASK_INTERFACE);
