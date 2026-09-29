@@ -7,9 +7,11 @@
 #include "microdrive.h"
 #include "io.h"
 #include "screen.h"
+#include "disk.h"
 
 dram<0x18000> user_ram;
 prom qdos(jsrom, sizeof(jsrom));
+prom ddrv(disk, sizeof(disk));
 
 Memory memory;
 m68k cpu(memory);
@@ -31,11 +33,13 @@ void setup() {
 	io.begin();
 
 	memory.put(qdos, 0x00000);
+	memory.put(ddrv, 0x0c000);
 	memory.put(io, 0x10000);
 	memory.put(screen, 0x20000);
 	memory.put(user_ram, 0x28000);
 
-	machine.set_cpu_debugging([]() { return debug_cpu; });
+	//machine.set_cpu_debugging([]() { return debug_cpu; });
+	machine.set_cpu_debugging([]() { return cpu.pc() >= 0x0c000 && cpu.pc() < 0x0d000; });
 	machine.register_pollable(io);
 	machine.reset();
 }

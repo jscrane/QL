@@ -1,5 +1,8 @@
 .build
-build
 *.txt.mk
 serialout.txt
 .*.swp
+*.rom
+*.elf
+disk.o
+disk.h

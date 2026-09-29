@@ -10,3 +10,11 @@ LIBRARIES := Adafruit_GFX Adafruit_BusIO Wire SPI ESP32Lib
 PSRAM := enabled
 
 include $(CORE).mk
+
+disk.h: disk.rom
+	~/src/emul8/util/makerom -bp disk.rom disk > disk.h
+
+%.rom: %.s
+	m68k-linux-gnu-as --register-prefix-optional $< -o $*.o
+	m68k-linux-gnu-ld -Ttext=0 -e start -o $*.elf $*.o
+	m68k-linux-gnu-objcopy -O binary $*.elf $@
