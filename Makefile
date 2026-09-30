@@ -20,3 +20,6 @@ disk.rom: disk.s disk_device.h
 	m68k-linux-gnu-gcc -x assembler-with-cpp -c -Wa,--register-prefix-optional $< -o $*.o
 	m68k-linux-gnu-ld -Ttext=0 -e start -o $*.elf $*.o
 	m68k-linux-gnu-objcopy -O binary $*.elf $@
+
+realclean: clean
+	rm -f disk.elf disk.o disk.rom serialout.txt
