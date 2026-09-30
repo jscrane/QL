@@ -9,9 +9,11 @@
 #include "screen.h"
 #include "disk.h"
 #include "disk_device.h"
+#include "TKII220.h"
 
 dram<0x18000> user_ram;
 prom qdos(js, sizeof(js));
+prom tkii(TKII220, sizeof(TKII220));
 prom disk_driver(disk, sizeof(disk));
 
 Memory memory;
@@ -35,11 +37,12 @@ void setup() {
 	io.begin();
 
 	memory.put(qdos, 0x00000);
-	memory.put(disk_driver, DISK_DRIVER_ADDR);
-	memory.put(disk_device, DISK_DEVICE_ADDR);
+	memory.put(tkii, 0x0c000);
 	memory.put(io, 0x10000);
 	memory.put(screen, 0x20000);
 	memory.put(user_ram, 0x28000);
+	memory.put(disk_driver, DISK_DRIVER_ADDR);
+	memory.put(disk_device, DISK_DEVICE_ADDR);
 
 	//machine.set_cpu_debugging([]() { return debug_cpu; });
 	machine.set_cpu_debugging([]() { return cpu.pc() >= DISK_DRIVER_ADDR && cpu.pc() < DISK_DEVICE_ADDR; });
