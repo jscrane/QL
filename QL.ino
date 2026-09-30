@@ -2,7 +2,7 @@
 #include <m68k.h>
 #include <dram.h>
 
-#include "jsrom.h"
+#include "js.h"
 #include "keyboard.h"
 #include "microdrive.h"
 #include "io.h"
@@ -11,7 +11,7 @@
 #include "disk_device.h"
 
 dram<0x18000> user_ram;
-prom qdos(jsrom, sizeof(jsrom));
+prom qdos(js, sizeof(js));
 prom disk_driver(disk, sizeof(disk));
 
 Memory memory;

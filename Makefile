@@ -11,10 +11,10 @@ PSRAM := enabled
 
 include $(CORE).mk
 
-disk.h: disk.rom
-	~/src/emul8/util/makerom -bp disk.rom disk > disk.h
-
 disk.rom: disk.s disk_device.h
+
+%.h: %.rom
+	~/src/emul8/util/makerom -bp $< $* > $@
 
 %.rom: %.s
 	m68k-linux-gnu-gcc -x assembler-with-cpp -c -Wa,--register-prefix-optional $< -o $*.o
