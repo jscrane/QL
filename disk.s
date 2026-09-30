@@ -1,5 +1,8 @@
 	.text
 	.section .text
+	.global start
+
+#include "disk_device.h"
 
 start:
 	dc.l	0x4afb0001
@@ -15,14 +18,14 @@ proc_def:
 init:
 	movem.l d0-d7/a0-a6,-(sp)
 
-	moveq   #40,d1			| Allocate directory driver linkage block
+	moveq   #0x60,d1		| Allocate directory driver linkage block
 	moveq   #0x18,d0		| MT.ALCHP = allocate space in common heap
 	trap    #1
 
 	tst.l   d0
 	bne.s   init_done       	| allocation failed
 
-	move.l  a0,a3			| A3 = linkage block
+	lea     0x1c(a0),a3
 	lea     io(pc),a1		| $1C: I/O routine
 	move.l  a1,(a3)+
 	lea     open(pc),a1		| $20: Open routine
@@ -42,6 +45,8 @@ init:
         move.w  #3,(a3)+		| $42: second device
         move.l  #0x44495330,(a3)+	| "DIS0"
 
+	move.l  a0,a3			| A3 = linkage block
+
 	lea     0x18(a0),a0		| Install driver
 	moveq   #0x22,d0		| MT.LDD
 	trap    #1
@@ -56,10 +61,35 @@ init_done:
 	rts
 
 io:
+	lea	DISK_IO, a2
+	clr.l	d0
+	move.b	(a2), d0
+	tst.l	d0
 	rts
 
+| Entry/exit
+|   D0 - /error code
+|   D3 - open type
+|   A0 - channel def block
+|   A1 - physical def block
+|   A3 - assumed start of linkage block
+|   A6 - base of system variables
 open:
+	lea	DISK_OPEN, a2
+	clr.l	d0
+	move.b	(a2), d0
+	tst.l	d0
 	rts
 
+| Entry/exit
+|   D0 - /error code
+|   A0 - channel def block
+|   A1 - physical def block
+|   A3 - assumed start of linkage block
+|   A6 - base of system variables
 close:
+	lea	DISK_CLOSE, a2
+	clr.l	d0
+	move.b	(a2), d0
+	tst.l	d0
 	rts
