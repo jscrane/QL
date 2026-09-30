@@ -60,11 +60,23 @@ init_done:
 	movem.l (sp)+,d0-d7/a0-a6
 	rts
 
+| Entry/exit
+|   D0 - operation type/error code
+|   D1 - input/output byte
+|   D2 - buffer length?
+|   D3 - initial entry
+|   A0 - channel def block
+|   A1 - pointer to read/write buffer
+|   A2 - pointer to physical definition block
+|   A3 - assumed start of linkage block
+|   A6 - base of system variables
 io:
-	lea	DISK_IO, a2
-	clr.l	d0
-	move.b	(a2), d0
-	tst.l	d0
+	lea	DISK_IO, a4
+	clr.l	d4
+	move.b	(a4), d4
+	ext.w	d4
+	ext.l	d4
+	move.l	d4, d0
 	rts
 
 | Entry/exit
@@ -78,7 +90,8 @@ open:
 	lea	DISK_OPEN, a2
 	clr.l	d0
 	move.b	(a2), d0
-	tst.l	d0
+	ext.w	d0
+	ext.l	d0
 	rts
 
 | Entry/exit
@@ -91,5 +104,6 @@ close:
 	lea	DISK_CLOSE, a2
 	clr.l	d0
 	move.b	(a2), d0
-	tst.l	d0
+	ext.w	d0
+	ext.l	d0
 	rts

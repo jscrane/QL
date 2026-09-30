@@ -25,7 +25,7 @@ public:
 private:
 	uint8_t do_open(uint32_t type, Memory::address chan_def, Memory::address phys_def, Memory::address link_blk, Memory::address sys_vars);
 	uint8_t do_close(Memory::address chan_def, Memory::address phys_def, Memory::address link_blk, Memory::address sys_vars);
-	uint8_t do_io();
+	uint8_t do_io(/* FIXME */);
 
 	m68k &_cpu;
 };
