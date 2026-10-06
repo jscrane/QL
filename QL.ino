@@ -2,19 +2,19 @@
 #include <m68k.h>
 #include <dram.h>
 
-#include "js.h"
 #include "keyboard.h"
 #include "microdrive.h"
 #include "io.h"
 #include "screen.h"
-#include "disk.h"
-#include "disk_device.h"
-#include "TKII220.h"
+#include "js.h"
+#include "tkii220.h"
+#include "cst_qdisc_116.h"
+#include "qdisc.h"
 
 dram<0x18000> user_ram;
 prom qdos(js, sizeof(js));
-prom tkii(TKII220, sizeof(TKII220));
-prom disk_driver(disk, sizeof(disk));
+prom tkii(tkii220, sizeof(tkii220));
+prom qdisc(cst_qdisc_116, sizeof(cst_qdisc_116));
 
 Memory memory;
 m68k cpu(memory);
@@ -22,7 +22,7 @@ Arduino machine(cpu);
 Keyboard keyboard(Serial);
 IO io(keyboard);
 Screen screen;
-DiskDevice disk_device(cpu);
+QDisc floppy;
 
 bool debug_cpu = false;
 
@@ -41,11 +41,10 @@ void setup() {
 	memory.put(io, 0x10000);
 	memory.put(screen, 0x20000);
 	memory.put(user_ram, 0x28000);
-	memory.put(disk_driver, DISK_DRIVER_ADDR);
-	memory.put(disk_device, DISK_DEVICE_ADDR);
+	memory.put(qdisc, 0xc0000);
+	memory.put(floppy, 0xc3f00);
 
-	//machine.set_cpu_debugging([]() { return debug_cpu; });
-	machine.set_cpu_debugging([]() { return cpu.pc() >= DISK_DRIVER_ADDR && cpu.pc() < DISK_DEVICE_ADDR; });
+	machine.set_cpu_debugging([]() { return debug_cpu; });
 	machine.register_pollable(io);
 	machine.reset();
 }
