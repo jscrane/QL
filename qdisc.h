@@ -11,4 +11,6 @@ public:
 	void restore(Checkpoint &) override;
 
 private:
+	uint8_t _wd_status = 0;
+	uint8_t _wd_index_reads = 0;
 };

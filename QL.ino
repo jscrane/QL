@@ -45,6 +45,7 @@ void setup() {
 	memory.put(floppy, 0xc3f00);
 
 	machine.set_cpu_debugging([]() { return debug_cpu; });
+	//machine.set_cpu_debugging([]() { return cpu.pc() >= 0xc0000 && cpu.pc() < 0xc2000; });
 	machine.register_pollable(io);
 	machine.reset();
 }
