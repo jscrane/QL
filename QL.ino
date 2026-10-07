@@ -15,22 +15,33 @@ dram<0x18000> user_ram;
 prom qdos(js, sizeof(js));
 prom tkii(tkii220, sizeof(tkii220));
 prom qdisc(cst_qdisc_116, sizeof(cst_qdisc_116));
+hw_serial_kbd kbd(Serial);
 
 Memory memory;
 m68k cpu(memory);
 Arduino machine(cpu);
-Keyboard keyboard(Serial);
+Keyboard keyboard(kbd);
 IO io(keyboard);
 Screen screen;
 QDisc floppy;
 
 bool debug_cpu = false;
 
+static void function_keys(uint8_t key) {
+	switch (key) {
+	case 6:
+		machine.reset();
+		break;
+	}
+}
+
 void setup() {
 
 	machine.begin();
 	user_ram.begin();
 	screen.begin();
+	kbd.handle_fnkeys(F6);
+	kbd.register_fnkey_handler(function_keys);
 
 	io.set_display_ctrl([](uint8_t b) { screen.set_mode(b); });
 	io.set_interrupt_cpu([](bool b) { cpu.set_interrupt_level(b? 2: 0); });
