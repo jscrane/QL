@@ -12,5 +12,9 @@ public:
 
 private:
 	uint8_t _wd_status = 0;
+	uint8_t _latch = 0;
 	uint8_t _wd_index_reads = 0;
+	uint8_t _wd_track = 0;
+	uint8_t _wd_sector = 0;
+	uint8_t _wd_data = 0;
 };
