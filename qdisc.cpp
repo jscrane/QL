@@ -14,7 +14,7 @@
 extern m68k cpu;
 
 // QDisc has a WD1770 at $c3ff0
-// https://github.com/fesh0r/old-mame/blob/master/src/emu/machine/wd17xx.c
+// https://github.com/MisterTea/MAMEHub/blob/master/Sources/Emulator/src/emu/machine/wd17xx.c
 #define WD_BASE		0xf0
 #define WD_COMMAND	WD_BASE
 #define WD_STATUS	WD_BASE
