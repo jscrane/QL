@@ -10,6 +10,7 @@
 #include "tkii220.h"
 #include "cst_qdisc_116.h"
 #include "qdisc.h"
+#include "config.h"
 
 dram<0x18000> user_ram;
 prom qdos(js, sizeof(js));
@@ -23,16 +24,39 @@ Arduino machine(cpu);
 Keyboard keyboard(kbd);
 IO io(keyboard);
 Screen screen;
-QDisc floppy;
+flash_filer images(PROGRAMS);
+QDisc floppy(images);
 
 bool debug_cpu = false;
 
 static void function_keys(uint8_t key) {
+
+	static const char *disk_image;
+
 	switch (key) {
 	case 6:
 		machine.reset();
 		break;
+	case 7:
+		disk_image = images.advance();
+		screen.status(disk_image? disk_image: "No Disk");
+		break;
+	case 8:
+		disk_image = images.rewind();
+		screen.status(disk_image? disk_image: "No Disk");
+		break;
 	}
+}
+
+static void reset(bool sd) {
+
+	if (!sd)
+		screen.status("No SD Card");
+	else if (!images.start())
+		screen.status("Failed to open " PROGRAMS);
+
+	floppy.reset();
+	debug_cpu = false;
 }
 
 void setup() {
@@ -40,7 +64,7 @@ void setup() {
 	machine.begin();
 	user_ram.begin();
 	screen.begin();
-	kbd.handle_fnkeys(F6);
+	kbd.handle_fnkeys(F6 | F7 | F8);
 	kbd.register_fnkey_handler(function_keys);
 
 	io.set_display_ctrl([](uint8_t b) { screen.set_mode(b); });
@@ -58,10 +82,11 @@ void setup() {
 	machine.set_cpu_debugging([]() { return debug_cpu; });
 	//machine.set_cpu_debugging([]() { return cpu.pc() >= 0xc0000 && cpu.pc() < 0xc2000; });
 	machine.register_pollable(io);
+	machine.register_reset_handler(reset);
 	machine.reset();
 }
 
 void loop() {
 
-	machine.run(1);
+	machine.run(CLK_4MHZ);
 }

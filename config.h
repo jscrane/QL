@@ -8,3 +8,5 @@
 #else
 #define ORIENT          portrait
 #endif
+
+#define PROGRAMS	"/QL"

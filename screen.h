@@ -5,6 +5,7 @@ public:
 	Screen(): Memory::Device(0x10000) {}
 	void begin();
 	void set_mode(uint8_t);
+	void status(const char *message) { _dsp.status(message); }
 
 	void operator=(uint8_t) override;
 	operator uint8_t() override { return _ram.get(_acc); }
