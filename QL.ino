@@ -79,8 +79,8 @@ void setup() {
 	memory.put(qdisc, 0xc0000);
 	memory.put(floppy, 0xc3f00);
 
-//	machine.set_cpu_debugging([]() { return debug_cpu; });
-	machine.set_cpu_debugging([]() { return cpu.pc() >= 0xc10ac && cpu.pc() <= 0xc10ee; });
+	machine.set_cpu_debugging([]() { return debug_cpu; });
+//	machine.set_cpu_debugging([]() { return cpu.pc() >= 0xc10ac && cpu.pc() <= 0xc10ee; });
 //	machine.set_cpu_debugging([]() { return cpu.pc() >= 0xc12a6 && cpu.pc() <= 0xc12b8; });
 	machine.register_pollable(io);
 	machine.register_reset_handler(reset);

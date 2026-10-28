@@ -10,9 +10,14 @@
 
 bool debug_io = false;
 
+// debugging
+#include <CPU.h>
+#include <m68k.h>
+extern m68k cpu;
+
 void IO::operator=(uint8_t b) {
 
-	if (debug_io) DBG_EMU("> IO: %06x %02x", _acc, b);
+	if (debug_io) DBG_EMU("> IO: %06x %02x %06x", _acc, b, cpu.pc());
 
 	switch (_acc) {
 	case DISPLAY_CTRL:
@@ -38,7 +43,7 @@ void IO::operator=(uint8_t b) {
 		// ignore for now...
 		break;
 	default:
-		DBG_EMU("> IO: %06x %02x", _acc, b);
+		DBG_EMU("> IO: unimplemented %06x %02x (%06x)", _acc, b, cpu.pc());
 		break;
 	}
 }
@@ -67,11 +72,11 @@ IO::operator uint8_t() {
 		b = _rtc & 0xff;
 		break;
 	default:
-		DBG_EMU("< IO: %06x", _acc);
+		DBG_EMU("< IO: unimplmented %06x (%06x)", _acc, cpu.pc());
 		break;
 	}
 
-	if (debug_io) DBG_EMU("< IO: %06x %02x", _acc, b);
+	if (debug_io) DBG_EMU("< IO: %06x %02x %06x", _acc, b, cpu.pc());
 
 	return b;
 }

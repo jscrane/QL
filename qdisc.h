@@ -15,6 +15,9 @@ private:
 	uint8_t read_status();
 	uint8_t read_data();
 	void write_command(uint8_t);
+	int disk_side() const;
+	int disk_drive() const;
+	uint32_t offset() const;
 
 	flash_file &_image;
 	uint8_t _wd_status = 0;
@@ -27,6 +30,5 @@ private:
 	uint8_t _wd_data = 0;
 	uint16_t _wd_sector_pos = 0;
 	bool _wd_read_active = false;
-//	uint8_t _wd_id[6] = {};
-//	uint8_t _wd_id_pos = 0;
+	uint8_t _wd_last_cmd = 0;
 };

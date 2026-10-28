@@ -15,6 +15,7 @@
 #include <CPU.h>
 #include <m68k.h>
 extern m68k cpu;
+extern bool debug_cpu;
 
 #define TRACK_SECTORS	9
 #define SECTOR_BYTES	512
@@ -60,13 +61,6 @@ extern m68k cpu;
 #define WD_DRQ		0x02	// type-2
 #define WD_REC_NT_FND	0x10
 
-// latch
-#define LATCH		0xf8
-#define LA_HEAD		0x01
-#define LA_DISC_0	0x02
-#define LA_DISC_1	0x04
-#define LA_DENSITY	0x08
-
 static inline uint8_t cmd(uint8_t b) { return b & 0xf0; }
 
 static inline uint8_t cmd_type(uint8_t cmd) {
@@ -78,7 +72,20 @@ static inline uint8_t cmd_type(uint8_t cmd) {
 
 static inline uint8_t cmd_flags(uint8_t b) { return b & 0x0f; }
 
-static uint8_t last_command = 0;
+// latch
+#define LATCH		0xf8
+#define LA_HEAD		0x01
+#define LA_DISC_0	0x02
+#define LA_DISC_1	0x04
+#define LA_DENSITY	0x08
+
+inline int QDisc::disk_side() const { return (_latch & LA_HEAD)? 1: 0; }
+
+inline int QDisc::disk_drive() const { return (_latch & LA_DISC_0)? 0: 1; }
+
+inline uint32_t QDisc::offset() const {
+	return SECTOR_BYTES*((_wd_sector-1) + TRACK_SECTORS*((_wd_track-1)*2 + disk_side()));
+}
 
 void QDisc::operator=(uint8_t b) {
 
@@ -128,14 +135,12 @@ QDisc::operator uint8_t() {
 	}
 
 	if (cpu.base_pc() != 0x0c13d6 && cpu.base_pc() != 0x0c133e && b != 0xff)
-		DBG_EMU("< QDisc: %02x %02x %06x cmd=%02x", _acc, b, cpu.base_pc(), last_command);
+		DBG_EMU("< QDisc: %02x %02x %06x cmd=%02x", _acc, b, cpu.base_pc(), _wd_last_cmd);
 
 	return b;
 }
 
 void QDisc::write_command(uint8_t b) {
-
-	_wd_status |= WD_BUSY;
 
 	uint8_t c = cmd(b);
 	_wd_command_type = cmd_type(c);
@@ -178,7 +183,7 @@ void QDisc::write_command(uint8_t b) {
 		break;
 	case WD_READ_SECT:
 		DBG_EMU("QDisc: SECTOR track=%02x sector=%02x", _wd_track, _wd_sector);
-		if (_image.seek(SECTOR_BYTES*((_wd_sector-1) + TRACK_SECTORS*(_wd_track-1)))) {
+		if (_image.seek(offset())) {
 			_wd_sector_pos = 0;
 			_wd_status = WD_BUSY | WD_DRQ;
 			_wd_read_active = true;
@@ -186,17 +191,7 @@ void QDisc::write_command(uint8_t b) {
 			DBG_EMU("QDisc: seek failed");
 		break;
 	case WD_READ_ADDR:
-		DBG_EMU("QDisc: ADDR status=%02x last=%02x", _wd_status, last_command);
-		/*
-		_wd_id[0] = _wd_track;
-		_wd_id[1] = (_latch & LA_HEAD) ? 1 : 0;	// side
-		_wd_id[2] = _wd_sector;
-		_wd_id[3] = 2;				// sector length = 512 bytes
-		_wd_id[4] = 0;				// crc placeholder
-		_wd_id[5] = 0;				// crc placeholder
-		_wd_id_pos = 0;
-		_wd_read_active = false;
-		*/
+		DBG_EMU("QDisc: ADDR status=%02x last=%02x", _wd_status, _wd_last_cmd);
 		_wd_sector = _wd_track;
 		_wd_status &= ~WD_BUSY;
 		break;
@@ -205,7 +200,7 @@ void QDisc::write_command(uint8_t b) {
 		break;
 	}
 
-	last_command = b;
+	_wd_last_cmd = b;
 }
 
 uint8_t QDisc::read_status() {
@@ -224,31 +219,18 @@ uint8_t QDisc::read_status() {
 
 uint8_t QDisc::read_data() {
 
-	uint8_t b = 0xff;
-
-	/*
-	if (cmd(last_command) == WD_READ_ADDR) {
-		b = _wd_id[_wd_id_pos++];
-		if (_wd_id_pos == sizeof(_wd_id))
-			_wd_status &= ~(WD_BUSY | WD_DRQ);
-
-		DBG_EMU("< QDisc DAM pos=%d data=%02x", _wd_id_pos, b);
-		return b;
-	}
-	*/
-
 	if (!_wd_read_active)
-		return b;
+		return 0xff;
 
 	int data = _image.read();
 	if (data < 0) {
 		_wd_status &= ~(WD_BUSY | WD_DRQ);
 		_wd_status |= WD_CRC_ERR;	// temporary read-failure indication
 		_wd_read_active = false;
-		return b;
+		return 0xff;
 	}
 
-	b = (uint8_t)data;
+	uint8_t b = (uint8_t)data;
 	_wd_sector_pos++;
 
 	if (_wd_sector_pos >= SECTOR_BYTES) {
@@ -256,7 +238,9 @@ uint8_t QDisc::read_data() {
 		_wd_read_active = false;
 	}
 
-	DBG_EMU("< QDisc DATA pos=%d data=%02x", _wd_sector_pos, b);
+	if (_wd_sector_pos == 1 || _wd_sector_pos == SECTOR_BYTES)
+		DBG_EMU("< QDisc DATA pos=%d data=%02x", _wd_sector_pos, b);
+
 	return b;
 }
 
