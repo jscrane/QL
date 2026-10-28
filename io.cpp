@@ -12,7 +12,7 @@ bool debug_io = false;
 
 void IO::operator=(uint8_t b) {
 
-	if (debug_io) DBG_EMU("> %06x %02x", _acc, b);
+	if (debug_io) DBG_EMU("> IO: %06x %02x", _acc, b);
 
 	switch (_acc) {
 	case DISPLAY_CTRL:
@@ -38,7 +38,7 @@ void IO::operator=(uint8_t b) {
 		// ignore for now...
 		break;
 	default:
-		DBG_EMU("> %06x %02x", _acc, b);
+		DBG_EMU("> IO: %06x %02x", _acc, b);
 		break;
 	}
 }
@@ -67,11 +67,11 @@ IO::operator uint8_t() {
 		b = _rtc & 0xff;
 		break;
 	default:
-		DBG_EMU("< %06x", _acc);
+		DBG_EMU("< IO: %06x", _acc);
 		break;
 	}
 
-	if (debug_io) DBG_EMU("< %06x %02x", _acc, b);
+	if (debug_io) DBG_EMU("< IO: %06x %02x", _acc, b);
 
 	return b;
 }

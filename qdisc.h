@@ -18,11 +18,15 @@ private:
 
 	flash_file &_image;
 	uint8_t _wd_status = 0;
+	uint8_t _wd_command_type = 0;
 	uint8_t _latch = 0;
 	uint8_t _wd_index_reads = 0;
 	uint8_t _wd_track = 0;
+	int _wd_direction = -1;
 	uint8_t _wd_sector = 1;
 	uint8_t _wd_data = 0;
 	uint16_t _wd_sector_pos = 0;
 	bool _wd_read_active = false;
+//	uint8_t _wd_id[6] = {};
+//	uint8_t _wd_id_pos = 0;
 };
