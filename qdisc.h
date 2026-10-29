@@ -8,8 +8,8 @@ public:
 	void operator=(uint8_t) override;
 	operator uint8_t() override;
 
-	void checkpoint(Checkpoint &) override;
-	void restore(Checkpoint &) override;
+	void checkpoint(Checkpoint &) override {}
+	void restore(Checkpoint &) override {}
 
 private:
 	uint8_t read_status();
@@ -18,6 +18,7 @@ private:
 	int disk_side() const;
 	int disk_drive() const;
 	uint32_t offset() const;
+	bool can_seek() const;
 
 	flash_file &_image;
 	uint8_t _wd_status = 0;
