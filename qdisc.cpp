@@ -7,11 +7,10 @@
 #include "qdisc.h"
 
 // QDisc has a WD1770 at $c3ff0
-// https://github.com/MisterTea/MAMEHub/blob/master/Sources/Emulator/src/emu/machine/wd17xx.c
 #define WD_BASE		0xf0
 #define WD_COMMAND	WD_BASE
 #define WD_STATUS	WD_BASE
-#define WD_TRACK	(WD_BASE + 2)		// this is the QDisc wiring (address lines are reversed)
+#define WD_TRACK	(WD_BASE + 2)		// QDisc wiring: address lines are reversed
 #define WD_SECTOR	(WD_BASE + 1)
 #define WD_DATA		(WD_BASE + 3)
 

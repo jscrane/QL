@@ -1202,7 +1202,7 @@
 00000d9c   4a2b0045			L186	TST.B	69(A3)
 00000da0   6708					BEQ	L189
 00000da2   6108				L187	BSR	L190
-00000da4   4a2b0045			L188	TST.B	69(A3)
+00000da4   4a2b0045			L188	TST.B	69(A3)				; spin until 50Hz poll clears 69(A3)
 00000da8   66fa					BNE	L188
 00000daa   4e75				L189	RTS
 00000dac   51eb005f			L190	SF	95(A3)				; "forced slaving" routine

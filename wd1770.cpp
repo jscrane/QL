@@ -1,11 +1,13 @@
+//
+// https://www.worldofsam.org/node/1097
+// https://github.com/MisterTea/MAMEHub/blob/master/Sources/Emulator/src/emu/machine/wd17xx.c
+//
 #include <cstdint>
 
 #include <machine.h>
 #include <debugging.h>
 #include <memory.h>
 #include <compat.h>
-#include <serialio.h>
-#include <filer.h>
 #include <flash_filer.h>
 
 #include "wd1770.h"
@@ -44,9 +46,10 @@
 #define WD_SEEK_ERR	0x10
 #define WD_HD_LOADED	0x20
 #define WD_WRITE_PROT	0x40
-#define WD_NOT_READY	0x80
+#define WD_MOTOR_ON	0x80	// wd1770 / wd1772 only
 #define WD_DRQ		0x02	// type-2
 #define WD_REC_NT_FND	0x10
+#define WD_WRITE_FAULT	0x20
 
 static inline uint8_t cmd(uint8_t b) { return b & 0xf0; }
 
@@ -72,9 +75,10 @@ void wd1770::write_command(uint8_t b) {
 	uint8_t c = cmd(b);
 	_command_type = cmd_type(c);
 
+	_motor_on = true;
+
 	switch (c) {
 	case WD_RESTORE:
-		_status |= WD_INDEX;
 		_status &= ~WD_BUSY;
 		_index_reads = 0;
 		_track = 0;
@@ -110,8 +114,8 @@ void wd1770::write_command(uint8_t b) {
 		_status &= ~WD_BUSY;
 		break;
 	case WD_FORCE_INT:
-		_read_active = false;
-		_status &= ~(WD_BUSY | WD_DRQ);
+		_read_active = _write_active = false;
+		_status &= ~(WD_BUSY | WD_DRQ | WD_CRC_ERR | WD_REC_NT_FND | WD_WRITE_FAULT);
 		break;
 	case WD_READ_SECT:
 		DBG_DISK("wd1770: READ SECTOR track=%02x sector=%02x", _track, _sector);
@@ -127,34 +131,43 @@ void wd1770::write_command(uint8_t b) {
 		break;
 	case WD_WRITE_SECT:
 		DBG_DISK("wd1770: WRITE SECTOR track=%02x sector=%02x", _track, _sector);
-		_status |= WD_WRITE_PROT;
-		_status &= ~WD_BUSY;
+		_write_active = can_seek() && _image->seek(offset());
+		if (_write_active) {
+			_sector_pos = 0;
+			_status = WD_BUSY | WD_DRQ;
+		} else {
+			if (*_image) DBG_DISK("wd1770: seek failed");
+			_status &= ~(WD_BUSY | WD_DRQ);
+			_status |= WD_REC_NT_FND;
+		}
 		break;
 	case WD_READ_ADDR:
-		DBG_DISK("wd1770: ADDR status=%02x last=%02x", _status, _last_cmd);
+		DBG_DISK("wd1770: READ ADDR status=%02x", _status);
 		_sector = _track;
 		_status &= ~WD_BUSY;
 		break;
 	default:
 		DBG_DISK("wd1770: unimplemented command %02x", c);
+		_motor_on = false;
 		break;
 	}
-
-	_last_cmd = b;
 }
 
 uint8_t wd1770::read_status() {
 
-	if (_command_type == 1 && _index_reads++ > 10)
-		_status &= ~WD_INDEX;
-
 	uint8_t b = _status;
-	if (*_image)
-		b &= ~WD_NOT_READY;
-	else
-		b |= WD_NOT_READY;
+
+	b &= ~WD_MOTOR_ON;
+	if (_motor_on)
+		b |= WD_MOTOR_ON;
 
 	if (_command_type == 1 || _command_type == 4) {
+
+		// pulse for 32 reads out of 4096
+		b &= ~WD_INDEX;
+		if ((_index_reads++ & 0x0fff) < 32)
+			b |= WD_INDEX;
+
 		if (_track == 0)
 			b |= WD_TRACK0;
 		else
@@ -171,6 +184,7 @@ uint8_t wd1770::read_data() {
 
 	int data = _image->read();
 	if (data < 0) {
+		DBG_DISK("read_data: %d: %d", _sector_pos, (bool)*_image);
 		_status &= ~(WD_BUSY | WD_DRQ);
 		_status |= WD_CRC_ERR;	// temporary read-failure indication
 		_read_active = false;
@@ -185,17 +199,38 @@ uint8_t wd1770::read_data() {
 		_read_active = false;
 	}
 
-	if (_sector_pos == 1 || _sector_pos == SECTOR_BYTES)
-		DBG_DISK("< wd1770 DATA pos=%d data=%02x", _sector_pos, b);
-
 	return b;
+}
+
+void wd1770::write_data(uint8_t b) {
+
+	_data = b;
+
+	if (!_write_active) return;
+
+	size_t n = _image->write(b);
+	if (n < 1) {
+		DBG_DISK("write_data: %d: %02x (%d) %d", _sector_pos, b, n, (bool)*_image);
+		_status &= ~(WD_BUSY | WD_DRQ);
+		_status |= WD_WRITE_FAULT;
+		_write_active = false;
+		return;
+	}
+
+	_sector_pos++;
+
+	if (_sector_pos >= SECTOR_BYTES) {
+		_image->flush();
+		_status &= ~(WD_BUSY | WD_DRQ);
+		_write_active = false;
+	}
 }
 
 void wd1770::reset() {
 
 	_sector = 1;
 	_sector_pos = 0;
-	_read_active = false;
+	_read_active = _write_active = _motor_on = false;
 	_command_type = 0;
 	_track = 0;
 	_direction = -1;

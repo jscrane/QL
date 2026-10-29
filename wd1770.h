@@ -15,7 +15,7 @@ public:
 	void write_command(uint8_t);
 	void write_track(uint8_t b) { _track = b; }
 	void write_sector(uint8_t b) { _sector = b; }
-	void write_data(uint8_t b) { _data = b; }
+	void write_data(uint8_t);
 
 	void set_side(uint8_t b) { _side = b; }
 	void set_drive(uint8_t b);
@@ -28,13 +28,14 @@ private:
 	flash_file *_image;
 	uint8_t _status = 0;
 	uint8_t _command_type = 0;
-	uint8_t _index_reads = 0;
+	uint16_t _index_reads = 0;
 	uint8_t _track = 0;
 	int _direction = -1;
 	uint8_t _sector = 1;
 	uint8_t _data = 0;
 	uint16_t _sector_pos = 0;
 	bool _read_active = false;
-	uint8_t _last_cmd = 0;
+	bool _write_active = false;
+	bool _motor_on = false;
 	uint8_t _side = 0;
 };
