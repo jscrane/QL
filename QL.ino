@@ -16,36 +16,48 @@ dram<0x18000> user_ram;
 prom qdos(js, sizeof(js));
 prom tkii(tkii220, sizeof(tkii220));
 prom qdisc(cst_qdisc_116, sizeof(cst_qdisc_116));
-hw_serial_kbd kbd(Serial);
 
 Memory memory;
 m68k cpu(memory);
 Arduino machine(cpu);
+
+hw_serial_kbd kbd(Serial);
 Keyboard keyboard(kbd);
 IO io(keyboard);
 Screen screen;
-flash_filer images(PROGRAMS);
-QDisc floppy(images);
+
+flash_filer images(PROGRAMS, 2);
+flash_file drive1(0), drive2(1);
+QDisc floppy(drive1, drive2);
 
 bool debug_cpu = false;
 
-static void function_keys(uint8_t key) {
+static void file_status() {
+	static const char *device_names[] = { "D1:", "D2:" };
+	const char *image = images.filename();
+	char buf[80];
+	strcpy(buf, device_names[images.device()]);
+	strcat(buf, image? image: "No image selected");
+	screen.status(buf);
+}
 
-	static const char *disk_image;
+static void function_keys(uint8_t key) {
 
 	switch (key) {
 	case 6:
 		machine.reset();
 		break;
 	case 7:
-		disk_image = images.advance();
-		screen.status(disk_image? disk_image: "No Disk");
+		images.advance();
 		break;
 	case 8:
-		disk_image = images.rewind();
-		screen.status(disk_image? disk_image: "No Disk");
+		images.rewind();
+		break;
+	case 9:
+		images.next_device();
 		break;
 	}
+	file_status();
 }
 
 static void reset(bool sd) {
@@ -64,7 +76,7 @@ void setup() {
 	machine.begin();
 	user_ram.begin();
 	screen.begin();
-	kbd.handle_fnkeys(F6 | F7 | F8);
+	kbd.handle_fnkeys(F6 | F7 | F8 | F9);
 	kbd.register_fnkey_handler(function_keys);
 
 	io.set_display_ctrl([](uint8_t b) { screen.set_mode(b); });

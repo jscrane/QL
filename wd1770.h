@@ -4,7 +4,7 @@ class flash_file;
 
 class wd1770 {
 public:
-	wd1770(flash_file &image): _image(image) {}
+	wd1770(flash_file &d1, flash_file &d2): _d1(d1), _d2(d2), _image(&d1) {}
 	void reset();
 
 	uint8_t read_status();
@@ -18,13 +18,14 @@ public:
 	void write_data(uint8_t b) { _wd_data = b; }
 
 	void set_side(uint8_t b) { _side = b; }
-	void set_drive(uint8_t b) { /* FIXME */ }
+	void set_drive(uint8_t b);
 
 private:
 	uint32_t offset() const;
 	bool can_seek() const;
 
-	flash_file &_image;
+	flash_file &_d1, &_d2;
+	flash_file *_image;
 	uint8_t _wd_status = 0;
 	uint8_t _wd_command_type = 0;
 	uint8_t _wd_index_reads = 0;

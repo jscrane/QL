@@ -4,7 +4,7 @@
 
 class QDisc: public Memory::Device {
 public:
-	QDisc(flash_file &image): Memory::Device(256), _wd(image) {}
+	QDisc(flash_file &d1, flash_file &d2): Memory::Device(256), _wd(d1, d2) {}
 	void reset() { _wd.reset(); }
 
 	void operator=(uint8_t) override;

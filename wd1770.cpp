@@ -64,7 +64,7 @@ inline uint32_t wd1770::offset() const {
 }
 
 inline bool wd1770::can_seek() const {
-	return _wd_sector >= 1 && _wd_sector <= MAX_SECTOR && _wd_track <= MAX_TRACK && _image;
+	return _wd_sector >= 1 && _wd_sector <= MAX_SECTOR && _wd_track <= MAX_TRACK && *_image;
 }
 
 void wd1770::write_command(uint8_t b) {
@@ -115,12 +115,12 @@ void wd1770::write_command(uint8_t b) {
 		break;
 	case WD_READ_SECT:
 		DBG_DISK("wd1770: READ SECTOR track=%02x sector=%02x", _wd_track, _wd_sector);
-		_wd_read_active = can_seek() && _image.seek(offset());
+		_wd_read_active = can_seek() && _image->seek(offset());
 		if (_wd_read_active) {
 			_wd_sector_pos = 0;
 			_wd_status = WD_BUSY | WD_DRQ;
 		} else {
-			if (_image) DBG_DISK("wd1770: seek failed");
+			if (*_image) DBG_DISK("wd1770: seek failed");
 			_wd_status &= ~(WD_BUSY | WD_DRQ);
 			_wd_status |= WD_REC_NT_FND;
 		}
@@ -149,7 +149,7 @@ uint8_t wd1770::read_status() {
 		_wd_status &= ~WD_INDEX;
 
 	uint8_t b = _wd_status;
-	if (_image)
+	if (*_image)
 		b &= ~WD_NOT_READY;
 	else
 		b |= WD_NOT_READY;
@@ -169,7 +169,7 @@ uint8_t wd1770::read_data() {
 	if (!_wd_read_active)
 		return 0xff;
 
-	int data = _image.read();
+	int data = _image->read();
 	if (data < 0) {
 		_wd_status &= ~(WD_BUSY | WD_DRQ);
 		_wd_status |= WD_CRC_ERR;	// temporary read-failure indication
@@ -199,4 +199,10 @@ void wd1770::reset() {
 	_wd_command_type = 0;
 	_wd_track = 0;
 	_wd_direction = -1;
+}
+
+void wd1770::set_drive(uint8_t b) {
+
+	_image = b? &_d2: &_d1;
+	reset();
 }
