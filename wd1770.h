@@ -8,14 +8,14 @@ public:
 	void reset();
 
 	uint8_t read_status();
-	uint8_t read_track() const { return _wd_track; }
-	uint8_t read_sector() const { return _wd_sector; }
+	uint8_t read_track() const { return _track; }
+	uint8_t read_sector() const { return _sector; }
 	uint8_t read_data();
 
 	void write_command(uint8_t);
-	void write_track(uint8_t b) { _wd_track = b; }
-	void write_sector(uint8_t b) { _wd_sector = b; }
-	void write_data(uint8_t b) { _wd_data = b; }
+	void write_track(uint8_t b) { _track = b; }
+	void write_sector(uint8_t b) { _sector = b; }
+	void write_data(uint8_t b) { _data = b; }
 
 	void set_side(uint8_t b) { _side = b; }
 	void set_drive(uint8_t b);
@@ -26,15 +26,15 @@ private:
 
 	flash_file &_d1, &_d2;
 	flash_file *_image;
-	uint8_t _wd_status = 0;
-	uint8_t _wd_command_type = 0;
-	uint8_t _wd_index_reads = 0;
-	uint8_t _wd_track = 0;
-	int _wd_direction = -1;
-	uint8_t _wd_sector = 1;
-	uint8_t _wd_data = 0;
-	uint16_t _wd_sector_pos = 0;
-	bool _wd_read_active = false;
-	uint8_t _wd_last_cmd = 0;
+	uint8_t _status = 0;
+	uint8_t _command_type = 0;
+	uint8_t _index_reads = 0;
+	uint8_t _track = 0;
+	int _direction = -1;
+	uint8_t _sector = 1;
+	uint8_t _data = 0;
+	uint16_t _sector_pos = 0;
+	bool _read_active = false;
+	uint8_t _last_cmd = 0;
 	uint8_t _side = 0;
 };

@@ -60,102 +60,102 @@ static inline uint8_t cmd_type(uint8_t cmd) {
 static inline uint8_t cmd_flags(uint8_t b) { return b & 0x0f; }
 
 inline uint32_t wd1770::offset() const {
-	return SECTOR_BYTES*((_wd_sector-1) + TRACK_SECTORS*(_wd_track*2 + _side));
+	return SECTOR_BYTES*((_sector-1) + TRACK_SECTORS*(_track*2 + _side));
 }
 
 inline bool wd1770::can_seek() const {
-	return _wd_sector >= 1 && _wd_sector <= MAX_SECTOR && _wd_track <= MAX_TRACK && *_image;
+	return _sector >= 1 && _sector <= MAX_SECTOR && _track <= MAX_TRACK && *_image;
 }
 
 void wd1770::write_command(uint8_t b) {
 
 	uint8_t c = cmd(b);
-	_wd_command_type = cmd_type(c);
+	_command_type = cmd_type(c);
 
 	switch (c) {
 	case WD_RESTORE:
-		_wd_status |= WD_INDEX;
-		_wd_status &= ~WD_BUSY;
-		_wd_index_reads = 0;
-		_wd_track = 0;
-		_wd_direction = -1;
+		_status |= WD_INDEX;
+		_status &= ~WD_BUSY;
+		_index_reads = 0;
+		_track = 0;
+		_direction = -1;
 		break;
 	case WD_SEEK:
-		_wd_track = _wd_data;
-		_wd_status &= ~WD_BUSY;
-		DBG_DISK("wd1770: SEEK track=%02x", _wd_track);
+		_track = _data;
+		_status &= ~WD_BUSY;
+		DBG_DISK("wd1770: SEEK track=%02x", _track);
 		break;
 	case WD_STEP:
 	case WD_STEP_U:
 		if (c & WD_STEP_UPDATE) {
-			if (_wd_track > 0 && _wd_direction < 0)
-				_wd_track--;
-			else if (_wd_track < MAX_TRACK && _wd_direction > 0)
-				_wd_track++;
+			if (_track > 0 && _direction < 0)
+				_track--;
+			else if (_track < MAX_TRACK && _direction > 0)
+				_track++;
 		}
-		_wd_status &= ~WD_BUSY;
+		_status &= ~WD_BUSY;
 		break;
 	case WD_STEP_IN:
 	case WD_STEP_IN_U:
-		_wd_direction = 1;
-		if ((c & WD_STEP_UPDATE) && _wd_track < MAX_TRACK)
-			_wd_track++;
-		_wd_status &= ~WD_BUSY;
+		_direction = 1;
+		if ((c & WD_STEP_UPDATE) && _track < MAX_TRACK)
+			_track++;
+		_status &= ~WD_BUSY;
 		break;
 	case WD_STEP_OUT:
 	case WD_STEP_OUT_U:
-		_wd_direction = -1;
-		if ((c & WD_STEP_UPDATE) && _wd_track > 0)
-			_wd_track--;
-		_wd_status &= ~WD_BUSY;
+		_direction = -1;
+		if ((c & WD_STEP_UPDATE) && _track > 0)
+			_track--;
+		_status &= ~WD_BUSY;
 		break;
 	case WD_FORCE_INT:
-		_wd_read_active = false;
-		_wd_status &= ~(WD_BUSY | WD_DRQ);
+		_read_active = false;
+		_status &= ~(WD_BUSY | WD_DRQ);
 		break;
 	case WD_READ_SECT:
-		DBG_DISK("wd1770: READ SECTOR track=%02x sector=%02x", _wd_track, _wd_sector);
-		_wd_read_active = can_seek() && _image->seek(offset());
-		if (_wd_read_active) {
-			_wd_sector_pos = 0;
-			_wd_status = WD_BUSY | WD_DRQ;
+		DBG_DISK("wd1770: READ SECTOR track=%02x sector=%02x", _track, _sector);
+		_read_active = can_seek() && _image->seek(offset());
+		if (_read_active) {
+			_sector_pos = 0;
+			_status = WD_BUSY | WD_DRQ;
 		} else {
 			if (*_image) DBG_DISK("wd1770: seek failed");
-			_wd_status &= ~(WD_BUSY | WD_DRQ);
-			_wd_status |= WD_REC_NT_FND;
+			_status &= ~(WD_BUSY | WD_DRQ);
+			_status |= WD_REC_NT_FND;
 		}
 		break;
 	case WD_WRITE_SECT:
-		DBG_DISK("wd1770: WRITE SECTOR track=%02x sector=%02x", _wd_track, _wd_sector);
-		_wd_status |= WD_WRITE_PROT;
-		_wd_status &= ~WD_BUSY;
+		DBG_DISK("wd1770: WRITE SECTOR track=%02x sector=%02x", _track, _sector);
+		_status |= WD_WRITE_PROT;
+		_status &= ~WD_BUSY;
 		break;
 	case WD_READ_ADDR:
-		DBG_DISK("wd1770: ADDR status=%02x last=%02x", _wd_status, _wd_last_cmd);
-		_wd_sector = _wd_track;
-		_wd_status &= ~WD_BUSY;
+		DBG_DISK("wd1770: ADDR status=%02x last=%02x", _status, _last_cmd);
+		_sector = _track;
+		_status &= ~WD_BUSY;
 		break;
 	default:
 		DBG_DISK("wd1770: unimplemented command %02x", c);
 		break;
 	}
 
-	_wd_last_cmd = b;
+	_last_cmd = b;
 }
 
 uint8_t wd1770::read_status() {
 
-	if (_wd_command_type == 1 && _wd_index_reads++ > 10)
-		_wd_status &= ~WD_INDEX;
+	if (_command_type == 1 && _index_reads++ > 10)
+		_status &= ~WD_INDEX;
 
-	uint8_t b = _wd_status;
+	uint8_t b = _status;
 	if (*_image)
 		b &= ~WD_NOT_READY;
 	else
 		b |= WD_NOT_READY;
 
-	if (_wd_command_type == 1 || _wd_command_type == 4) {
-		if (_wd_track == 0)
+	if (_command_type == 1 || _command_type == 4) {
+		if (_track == 0)
 			b |= WD_TRACK0;
 		else
 			b &= ~WD_TRACK0;
@@ -166,39 +166,39 @@ uint8_t wd1770::read_status() {
 
 uint8_t wd1770::read_data() {
 
-	if (!_wd_read_active)
+	if (!_read_active)
 		return 0xff;
 
 	int data = _image->read();
 	if (data < 0) {
-		_wd_status &= ~(WD_BUSY | WD_DRQ);
-		_wd_status |= WD_CRC_ERR;	// temporary read-failure indication
-		_wd_read_active = false;
+		_status &= ~(WD_BUSY | WD_DRQ);
+		_status |= WD_CRC_ERR;	// temporary read-failure indication
+		_read_active = false;
 		return 0xff;
 	}
 
 	uint8_t b = (uint8_t)data;
-	_wd_sector_pos++;
+	_sector_pos++;
 
-	if (_wd_sector_pos >= SECTOR_BYTES) {
-		_wd_status &= ~(WD_BUSY | WD_DRQ);
-		_wd_read_active = false;
+	if (_sector_pos >= SECTOR_BYTES) {
+		_status &= ~(WD_BUSY | WD_DRQ);
+		_read_active = false;
 	}
 
-	if (_wd_sector_pos == 1 || _wd_sector_pos == SECTOR_BYTES)
-		DBG_DISK("< wd1770 DATA pos=%d data=%02x", _wd_sector_pos, b);
+	if (_sector_pos == 1 || _sector_pos == SECTOR_BYTES)
+		DBG_DISK("< wd1770 DATA pos=%d data=%02x", _sector_pos, b);
 
 	return b;
 }
 
 void wd1770::reset() {
 
-	_wd_sector = 1;
-	_wd_sector_pos = 0;
-	_wd_read_active = false;
-	_wd_command_type = 0;
-	_wd_track = 0;
-	_wd_direction = -1;
+	_sector = 1;
+	_sector_pos = 0;
+	_read_active = false;
+	_command_type = 0;
+	_track = 0;
+	_direction = -1;
 }
 
 void wd1770::set_drive(uint8_t b) {
