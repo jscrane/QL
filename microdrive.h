@@ -2,6 +2,11 @@
 
 class Microdrive {
 public:
+	void reset() {
+		_control = 0;
+		_gap = false;
+	}
+
 	void write_control(uint8_t b) {
 
 		// Empty MDV1 presents a gap.

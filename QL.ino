@@ -12,7 +12,7 @@
 #include "qdisc.h"
 #include "config.h"
 
-dram<0x18000> user_ram;
+dram<USER_RAM> user_ram;
 prom qdos(js, sizeof(js));
 prom tkii(tkii220, sizeof(tkii220));
 prom qdisc(cst_qdisc_116, sizeof(cst_qdisc_116));
@@ -33,6 +33,7 @@ QDisc floppy(drive1, drive2);
 bool debug_cpu = false;
 
 static void file_status() {
+
 	static const char *device_names[] = { "D1:", "D2:" };
 	const char *image = images.filename();
 	char buf[80];
@@ -67,6 +68,7 @@ static void reset(bool sd) {
 	else if (!images.start())
 		screen.status("Failed to open " PROGRAMS);
 
+	io.reset();
 	floppy.reset();
 	debug_cpu = false;
 }

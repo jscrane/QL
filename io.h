@@ -4,6 +4,7 @@ class IO: public Memory::Device, public Pollable {
 public:
 	IO(Keyboard &kbd): Memory::Device(0x10000), _kbd(kbd) {}
 	void begin();
+	void reset();
 
 	void operator=(uint8_t) override;
 	operator uint8_t() override;

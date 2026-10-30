@@ -10,3 +10,5 @@
 #endif
 
 #define PROGRAMS	"/QL"
+
+#define USER_RAM	0x38000
