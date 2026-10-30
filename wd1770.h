@@ -36,6 +36,5 @@ private:
 	uint16_t _sector_pos = 0;
 	bool _read_active = false;
 	bool _write_active = false;
-	bool _motor_on = false;
 	uint8_t _side = 0;
 };

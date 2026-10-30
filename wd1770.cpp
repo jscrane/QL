@@ -75,8 +75,6 @@ void wd1770::write_command(uint8_t b) {
 	uint8_t c = cmd(b);
 	_command_type = cmd_type(c);
 
-	_motor_on = true;
-
 	switch (c) {
 	case WD_RESTORE:
 		_status &= ~WD_BUSY;
@@ -148,18 +146,13 @@ void wd1770::write_command(uint8_t b) {
 		break;
 	default:
 		DBG_DISK("wd1770: unimplemented command %02x", c);
-		_motor_on = false;
 		break;
 	}
 }
 
 uint8_t wd1770::read_status() {
 
-	uint8_t b = _status;
-
-	b &= ~WD_MOTOR_ON;
-	if (_motor_on)
-		b |= WD_MOTOR_ON;
+	uint8_t b = _status | WD_MOTOR_ON;
 
 	if (_command_type == 1 || _command_type == 4) {
 
@@ -230,7 +223,7 @@ void wd1770::reset() {
 
 	_sector = 1;
 	_sector_pos = 0;
-	_read_active = _write_active = _motor_on = false;
+	_read_active = _write_active = false;
 	_command_type = 0;
 	_track = 0;
 	_direction = -1;
