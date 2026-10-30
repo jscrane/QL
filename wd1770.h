@@ -21,8 +21,11 @@ public:
 	void set_drive(uint8_t b);
 
 private:
+	void end_command(uint8_t);
+	void start_sector(bool, bool);
+	void next_sector();
+	void step(int, uint8_t);
 	bool seek();
-	bool next_sector();
 
 	flash_file &_d1, &_d2;
 	flash_file *_image;
