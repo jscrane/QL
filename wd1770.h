@@ -23,6 +23,8 @@ public:
 private:
 	uint32_t offset() const;
 	bool can_seek() const;
+	bool seek();
+	bool next_sector();
 
 	flash_file &_d1, &_d2;
 	flash_file *_image;
@@ -36,5 +38,6 @@ private:
 	uint16_t _sector_pos = 0;
 	bool _read_active = false;
 	bool _write_active = false;
+	bool _multi = false;
 	uint8_t _side = 0;
 };

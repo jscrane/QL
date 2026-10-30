@@ -70,6 +70,10 @@ inline bool wd1770::can_seek() const {
 	return _sector >= 1 && _sector <= MAX_SECTOR && _track <= MAX_TRACK && *_image;
 }
 
+bool wd1770::seek() {
+	return can_seek() && _image->seek(offset());
+}
+
 void wd1770::write_command(uint8_t b) {
 
 	uint8_t c = cmd(b);
@@ -116,8 +120,10 @@ void wd1770::write_command(uint8_t b) {
 		_status &= ~(WD_BUSY | WD_DRQ | WD_CRC_ERR | WD_REC_NT_FND | WD_WRITE_FAULT);
 		break;
 	case WD_READ_SECT:
-		DBG_DISK("wd1770: READ SECTOR track=%02x sector=%02x", _track, _sector);
-		_read_active = can_seek() && _image->seek(offset());
+	case WD_READ_SECT_M:
+		_multi = (c == WD_READ_SECT_M);
+		DBG_DISK("wd1770: READ SECTOR%s track=%02x sector=%02x", _multi? " (multi)": "", _track, _sector);
+		_read_active = seek();
 		if (_read_active) {
 			_sector_pos = 0;
 			_status = WD_BUSY | WD_DRQ;
@@ -128,8 +134,10 @@ void wd1770::write_command(uint8_t b) {
 		}
 		break;
 	case WD_WRITE_SECT:
-		DBG_DISK("wd1770: WRITE SECTOR track=%02x sector=%02x", _track, _sector);
-		_write_active = can_seek() && _image->seek(offset());
+	case WD_WRITE_SECT_M:
+		_multi = (c == WD_READ_SECT_M);
+		DBG_DISK("wd1770: WRITE SECTOR%s track=%02x sector=%02x", _multi? " (multi)": "", _track, _sector);
+		_write_active = seek();
 		if (_write_active) {
 			_sector_pos = 0;
 			_status = WD_BUSY | WD_DRQ;
@@ -170,6 +178,21 @@ uint8_t wd1770::read_status() {
 	return b;
 }
 
+bool wd1770::next_sector() {
+
+	if (_multi) {
+		_sector++;
+		if (seek()) {
+			_sector_pos = 0;
+			return true;
+		}
+		_status |= WD_REC_NT_FND;	// off the end of the track: normal termination
+	}
+
+	_status &= ~(WD_BUSY | WD_DRQ);
+	return false;
+}
+
 uint8_t wd1770::read_data() {
 
 	if (!_read_active)
@@ -179,7 +202,7 @@ uint8_t wd1770::read_data() {
 	if (data < 0) {
 		DBG_DISK("read_data: %d: %d", _sector_pos, (bool)*_image);
 		_status &= ~(WD_BUSY | WD_DRQ);
-		_status |= WD_CRC_ERR;	// temporary read-failure indication
+		_status |= WD_CRC_ERR;		// temporary read-failure indication
 		_read_active = false;
 		return 0xff;
 	}
@@ -187,10 +210,8 @@ uint8_t wd1770::read_data() {
 	uint8_t b = (uint8_t)data;
 	_sector_pos++;
 
-	if (_sector_pos >= SECTOR_BYTES) {
-		_status &= ~(WD_BUSY | WD_DRQ);
-		_read_active = false;
-	}
+	if (_sector_pos >= SECTOR_BYTES)
+		_read_active = next_sector();
 
 	return b;
 }
@@ -214,8 +235,7 @@ void wd1770::write_data(uint8_t b) {
 
 	if (_sector_pos >= SECTOR_BYTES) {
 		_image->flush();
-		_status &= ~(WD_BUSY | WD_DRQ);
-		_write_active = false;
+		_write_active = next_sector();
 	}
 }
 
