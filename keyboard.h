@@ -1,17 +1,17 @@
 #pragma once
 
-class HardwareSerial;
+class serial_kbd;
 
 class Keyboard {
 public:
-	Keyboard(HardwareSerial &serial): _serial(serial) {}
+	Keyboard(serial_kbd &serial): _serial(serial) {}
 
 	bool available();
 
 	uint16_t read();
 
 private:
-	HardwareSerial &_serial;
+	serial_kbd &_serial;
 
 	bool _avail;
 	uint16_t _code;
