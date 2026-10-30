@@ -48,7 +48,7 @@ static void function_keys(uint8_t key) {
 		machine.reset();
 		break;
 	case 7:
-		images.advance();
+		images.next_file("img", readwrite);
 		break;
 	case 8:
 		images.rewind();
