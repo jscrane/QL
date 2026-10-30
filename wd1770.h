@@ -21,8 +21,6 @@ public:
 	void set_drive(uint8_t b);
 
 private:
-	uint32_t offset() const;
-	bool can_seek() const;
 	bool seek();
 	bool next_sector();
 

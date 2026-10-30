@@ -62,22 +62,21 @@ static inline uint8_t cmd_type(uint8_t cmd) {
 
 static inline uint8_t cmd_flags(uint8_t b) { return b & 0x0f; }
 
-inline uint32_t wd1770::offset() const {
-	return SECTOR_BYTES*((_sector-1) + TRACK_SECTORS*(_track*2 + _side));
-}
-
-inline bool wd1770::can_seek() const {
-	return _sector >= 1 && _sector <= MAX_SECTOR && _track <= MAX_TRACK && *_image;
-}
-
 bool wd1770::seek() {
-	return can_seek() && _image->seek(offset());
+	if (_sector >= 1 && _sector <= MAX_SECTOR && _track <= MAX_TRACK && *_image) {
+		uint32_t offset = SECTOR_BYTES*((_sector-1) + TRACK_SECTORS*(_track*2 + _side));
+		return _image->seek(offset);
+	}
+	return false;
 }
 
 void wd1770::write_command(uint8_t b) {
 
 	uint8_t c = cmd(b);
 	_command_type = cmd_type(c);
+
+	if (c != WD_FORCE_INT)
+		_status &= ~(WD_CRC_ERR | WD_REC_NT_FND | WD_WRITE_FAULT);
 
 	switch (c) {
 	case WD_RESTORE:
@@ -135,7 +134,7 @@ void wd1770::write_command(uint8_t b) {
 		break;
 	case WD_WRITE_SECT:
 	case WD_WRITE_SECT_M:
-		_multi = (c == WD_READ_SECT_M);
+		_multi = (c == WD_WRITE_SECT_M);
 		DBG_DISK("wd1770: WRITE SECTOR%s track=%02x sector=%02x", _multi? " (multi)": "", _track, _sector);
 		_write_active = seek();
 		if (_write_active) {
@@ -151,9 +150,6 @@ void wd1770::write_command(uint8_t b) {
 		DBG_DISK("wd1770: READ ADDR status=%02x", _status);
 		_sector = _track;
 		_status &= ~WD_BUSY;
-		break;
-	default:
-		DBG_DISK("wd1770: unimplemented command %02x", c);
 		break;
 	}
 }
@@ -243,7 +239,7 @@ void wd1770::reset() {
 
 	_sector = 1;
 	_sector_pos = 0;
-	_read_active = _write_active = false;
+	_read_active = _write_active = _multi = false;
 	_command_type = 0;
 	_track = 0;
 	_direction = -1;
@@ -251,6 +247,10 @@ void wd1770::reset() {
 
 void wd1770::set_drive(uint8_t b) {
 
-	_image = b? &_d2: &_d1;
-	reset();
+	flash_file *f = b? &_d2: &_d1;
+	if (f != _image) {
+		_image = f;
+		_read_active = _write_active = false;
+		_status &= ~(WD_BUSY | WD_DRQ);
+	}
 }
