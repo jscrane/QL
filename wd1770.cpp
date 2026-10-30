@@ -151,6 +151,9 @@ void wd1770::write_command(uint8_t b) {
 		_sector = _track;
 		_status &= ~WD_BUSY;
 		break;
+	default:
+		DBG_DISK("wd1770: unimplemented command %02x", c);
+		break;
 	}
 }
 
