@@ -3,7 +3,6 @@
 
 #include <machine.h>
 #include <debugging.h>
-#include <serial_kbd.h>
 
 #include "keyboard.h"
 

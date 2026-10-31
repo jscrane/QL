@@ -1,10 +1,12 @@
 #pragma once
 
-class serial_kbd;
+#include <serial_kbd.h>
 
 class Keyboard {
 public:
 	Keyboard(serial_kbd &serial): _serial(serial) {}
+
+	void reset() { _serial.reset(); }
 
 	bool available();
 

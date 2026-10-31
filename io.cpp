@@ -159,6 +159,7 @@ void IO::begin() {
 void IO::reset() {
 
 	_mdv.reset();
+	_kbd.reset();
 
 	_ipc_state = Start;
 	_irq_status = 0;

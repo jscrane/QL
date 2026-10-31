@@ -69,6 +69,7 @@ static void reset(bool sd) {
 		screen.status("Failed to open " PROGRAMS);
 
 	io.reset();
+	screen.reset();
 	floppy.reset();
 	debug_cpu = false;
 }
@@ -78,8 +79,7 @@ void setup() {
 	machine.begin();
 	user_ram.begin();
 	screen.begin();
-	kbd.handle_fnkeys(F6 | F7 | F8 | F9);
-	kbd.register_fnkey_handler(function_keys);
+	kbd.register_fnkey_handler(F6 | F7 | F8 | F9, function_keys);
 
 	io.set_display_ctrl([](uint8_t b) { screen.set_mode(b); });
 	io.set_interrupt_cpu([](bool b) { cpu.set_interrupt_level(b? 2: 0); });
@@ -101,5 +101,5 @@ void setup() {
 
 void loop() {
 
-	machine.run(CLK_4MHZ);
+	machine.run(CLK_8MHZ);
 }

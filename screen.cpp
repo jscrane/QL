@@ -107,7 +107,7 @@ void Screen::set_mode(uint8_t mode) {
 	bool mode4 = _mode4;
 	_mode4 = !(mode & 0x08);
 	if (mode4 != _mode4)
-		_dsp.setScreen(_mode4? 512: 256, 256 /* , CENTER_ALL */);
+		set_screen();
 
 	bool screen2 = _screen2;
 	_screen2 = (mode & 0x80);
@@ -118,6 +118,15 @@ void Screen::set_mode(uint8_t mode) {
 void Screen::begin() {
 	_ram.begin();
 	_dsp.begin(BG_COLOUR, FG_COLOUR, ORIENT);
+}
+
+void Screen::reset() {
+	_mode4 = _screen2 = false;
+	set_screen();
+}
+
+void Screen::set_screen() {
+	_dsp.setScreen(_mode4? 512: 256, 256, CENTER_SCREEN | CENTER_DISPLAY_X);
 }
 
 void Screen::checkpoint(Checkpoint &c) {
