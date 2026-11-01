@@ -6,25 +6,16 @@ class fnkey_kbd: public serial_kbd {
 public:
 	fnkey_kbd(serial_kbd &src): _src(src) {}
 
-	bool available() override {
-		while (!_have && _src.available()) {
-			int c = _src.read();
-			if (c >= 0 && !claimed(c)) {
-				_next = c;
-				_have = true;
-			}
-		}
-		return _have;
-	}
+	bool available() override { return _src.available(); }
 
 	int read() override {
-		if (!available())
-			return -1;
-		_have = false;
-		return _next;
+		int c = _src.read();
+		if (c < 0 || claimed(c))
+			return -1;			// nothing, or the emulator took it
+		return c;
 	}
 
-	void reset() override { _src.reset(); _have = false; }
+	void reset() override { _src.reset(); }
 
 private:
 	bool claimed(int c) {
@@ -34,6 +25,4 @@ private:
 	}
 
 	serial_kbd &_src;
-	int _next = -1;
-	bool _have = false;
 };

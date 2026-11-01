@@ -28,6 +28,8 @@ public:
 
 	int read();
 
+	bool pending() const { return _state != GROUND; }	// partway through a sequence
+
 private:
 	static constexpr uint8_t ESC = 0x1b;
 	static constexpr uint8_t queue_size = 4;	// power of two
@@ -59,11 +61,15 @@ class ansi_kbd: public serial_kbd {
 public:
 	ansi_kbd(serial_kbd &src): _src(src) {}
 
-	bool available() override;
+	bool available() override {
+		return _dec.available() || _dec.pending() || _src.available();
+	}
 
 	int read() override;
 
-	void reset() override;
+	void reset() override {
+		_src.reset(); _dec.reset();
+	};
 
 private:
 	serial_kbd &_src;

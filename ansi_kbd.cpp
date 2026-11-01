@@ -113,23 +113,16 @@ void ansi_decoder::dispatch(uint8_t final) {
 	push(key);
 }
 
-inline uint32_t now() {
+static inline uint32_t now() {
 	return _machine->microseconds() / 1000;
 }
 
-bool ansi_kbd::available() {
+int ansi_kbd::read() {
 	while (_dec.can_accept() && _src.available()) {
 		int c = _src.read();
 		if (c >= 0)
 			_dec.feed(c, now());
 	}
 	_dec.poll(now());			// after draining
-	return _dec.available();
+	return _dec.read();			// -1 if no key is ready yet
 }
-
-int ansi_kbd::read() {
-	available();
-	return _dec.read();			// -1 if nothing
-}
-
-void ansi_kbd::reset() { _src.reset(); _dec.reset(); }
