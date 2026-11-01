@@ -3,10 +3,12 @@
 
 #include <machine.h>
 #include <debugging.h>
+#include <keys.h>
 
 #include "keyboard.h"
 #include "ansi_kbd.h"
-#include "keys.h"
+
+using namespace keys;
 
 static uint16_t ascii_keycodes[128] PROGMEM = {
 	0x0236, 0x0000, 0x0000, 0x022b, 0x0000, 0x0000, 0x0000, 0x0000,		// 0x00

@@ -1,9 +1,9 @@
 #include <r65emu.h>
 #include <m68k.h>
 #include <dram.h>
+#include <keys.h>
 
 #include "keyboard.h"
-#include "keys.h"
 #include "ansi_kbd.h"
 #include "fnkey_kbd.h"
 #include "microdrive.h"

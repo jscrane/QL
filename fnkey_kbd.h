@@ -19,9 +19,9 @@ public:
 
 private:
 	bool claimed(int c) {
-		if (c & ~KEY_MASK)			// modified: leave for the guest
+		if (c & ~keys::KEY_MASK)		// modified: leave for the guest
 			return false;
-		return c >= KEY_F1 && c <= KEY_F12 && handle_fnkey(c - KEY_F1 + 1);
+		return c >= keys::KEY_F1 && c <= keys::KEY_F12 && handle_fnkey(c - keys::KEY_F1 + 1);
 	}
 
 	serial_kbd &_src;

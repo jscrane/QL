@@ -5,6 +5,8 @@
 #include <ansi_kbd.h>
 #include <keys.h>
 
+using namespace keys;
+
 void ansi_decoder::feed(uint8_t c, uint32_t now) {
 	_t = now;
 	for (;;) {			// loops to reprocess a byte after an abort
