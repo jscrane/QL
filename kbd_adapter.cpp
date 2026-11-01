@@ -5,7 +5,7 @@
 #include <debugging.h>
 #include <keys.h>
 
-#include "keyboard.h"
+#include "kbd_adapter.h"
 #include "ansi_kbd.h"
 
 using namespace keys;
@@ -38,7 +38,7 @@ static uint16_t special_keycodes[16] PROGMEM = {
 constexpr uint16_t QL_CTRL  = 0x200;
 constexpr uint16_t QL_SHIFT = 0x400;
 
-bool Keyboard::available() {
+bool KeyboardAdapter::available() {
 
 	if (_avail)
 		return true;
@@ -73,7 +73,7 @@ bool Keyboard::available() {
 	return false;
 }
 
-uint16_t Keyboard::read() {
+uint16_t KeyboardAdapter::read() {
 
 	if (!_avail)
 		return 0xffff;

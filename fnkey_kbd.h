@@ -1,10 +1,11 @@
 #pragma once
 
-#include <serial_kbd.h>
+#include <keyboard.h>
+#include <function_keys.h>
 
-class fnkey_kbd: public serial_kbd {
+class fnkey_kbd: public keyboard, public function_keys {
 public:
-	fnkey_kbd(serial_kbd &src): _src(src) {}
+	fnkey_kbd(keyboard &src): _src(src) {}
 
 	bool available() override { return _src.available(); }
 
@@ -24,5 +25,5 @@ private:
 		return c >= keys::KEY_F1 && c <= keys::KEY_F12 && handle_fnkey(c - keys::KEY_F1 + 1);
 	}
 
-	serial_kbd &_src;
+	keyboard &_src;
 };

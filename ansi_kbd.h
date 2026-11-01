@@ -55,11 +55,11 @@ private:
 	uint8_t _head = 0, _count = 0;
 };
 
-#include <serial_kbd.h>
+#include <keyboard.h>
 
-class ansi_kbd: public serial_kbd {
+class ansi_kbd: public keyboard {
 public:
-	ansi_kbd(serial_kbd &src): _src(src) {}
+	ansi_kbd(keyboard &src): _src(src) {}
 
 	bool available() override {
 		return _dec.available() || _dec.pending() || _src.available();
@@ -67,11 +67,9 @@ public:
 
 	int read() override;
 
-	void reset() override {
-		_src.reset(); _dec.reset();
-	};
+	void reset() override { _src.reset(); _dec.reset(); };
 
 private:
-	serial_kbd &_src;
+	keyboard &_src;
 	ansi_decoder _dec;
 };

@@ -3,7 +3,7 @@
 #include <dram.h>
 #include <keys.h>
 
-#include "keyboard.h"
+#include "kbd_adapter.h"
 #include "ansi_kbd.h"
 #include "fnkey_kbd.h"
 #include "microdrive.h"
@@ -27,7 +27,7 @@ Arduino machine(cpu);
 hw_serial_kbd hw(Serial);
 ansi_kbd ansi(hw);
 fnkey_kbd fk(ansi);
-Keyboard keyboard(fk);
+KeyboardAdapter keyboard(fk);
 IO io(keyboard);
 Screen screen;
 

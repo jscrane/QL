@@ -1,10 +1,10 @@
 #pragma once
 
-#include <serial_kbd.h>
+#include <keyboard.h>
 
-class Keyboard {
+class KeyboardAdapter {
 public:
-	Keyboard(serial_kbd &kbd): _kbd(kbd) {}
+	KeyboardAdapter(keyboard &kbd): _kbd(kbd) {}
 
 	void reset() { _kbd.reset(); }
 
@@ -13,7 +13,7 @@ public:
 	uint16_t read();
 
 private:
-	serial_kbd &_kbd;
+	keyboard &_kbd;
 
 	bool _avail;
 	uint16_t _code;

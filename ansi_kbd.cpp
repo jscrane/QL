@@ -1,7 +1,7 @@
 #include <cstdint>
 
 #include <machine.h>
-#include <serial_kbd.h>
+#include <keyboard.h>
 #include <ansi_kbd.h>
 #include <keys.h>
 

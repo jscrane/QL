@@ -4,7 +4,7 @@
 #include <memory.h>
 #include <debugging.h>
 
-#include "keyboard.h"
+#include "kbd_adapter.h"
 #include "microdrive.h"
 #include "io.h"
 
