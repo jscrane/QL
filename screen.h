@@ -1,5 +1,7 @@
 #pragma once
 
+#include <display.h>
+
 class Screen: public Memory::Device {
 public:
 	Screen(): Memory::Device(0x10000) {}

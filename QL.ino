@@ -1,11 +1,12 @@
 #include <r65emu.h>
 #include <m68k.h>
 #include <dram.h>
-#include <keys.h>
+#include <hw_serial_kbd.h>
+#include <fnkey_kbd.h>
+#include <ansi_kbd.h>
+#include <flash_filer.h>
 
 #include "kbd_adapter.h"
-#include "ansi_kbd.h"
-#include "fnkey_kbd.h"
 #include "microdrive.h"
 #include "io.h"
 #include "screen.h"
