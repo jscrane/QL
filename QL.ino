@@ -3,6 +3,9 @@
 #include <dram.h>
 
 #include "keyboard.h"
+#include "keys.h"
+#include "ansi_kbd.h"
+#include "fnkey_kbd.h"
 #include "microdrive.h"
 #include "io.h"
 #include "screen.h"
@@ -21,8 +24,10 @@ Memory memory;
 m68k cpu(memory);
 Arduino machine(cpu);
 
-hw_serial_kbd kbd(Serial);
-Keyboard keyboard(kbd);
+hw_serial_kbd hw(Serial);
+ansi_kbd ansi(hw);
+fnkey_kbd fk(ansi);
+Keyboard keyboard(fk);
 IO io(keyboard);
 Screen screen;
 
@@ -79,7 +84,7 @@ void setup() {
 	machine.begin();
 	user_ram.begin();
 	screen.begin();
-	kbd.register_fnkey_handler(F6 | F7 | F8 | F9, function_keys);
+	fk.register_fnkey_handler(F6 | F7 | F8 | F9, function_keys);
 
 	io.set_display_ctrl([](uint8_t b) { screen.set_mode(b); });
 	io.set_interrupt_cpu([](bool b) { cpu.set_interrupt_level(b? 2: 0); });

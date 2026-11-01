@@ -4,16 +4,16 @@
 
 class Keyboard {
 public:
-	Keyboard(serial_kbd &serial): _serial(serial) {}
+	Keyboard(serial_kbd &kbd): _kbd(kbd) {}
 
-	void reset() { _serial.reset(); }
+	void reset() { _kbd.reset(); }
 
 	bool available();
 
 	uint16_t read();
 
 private:
-	serial_kbd &_serial;
+	serial_kbd &_kbd;
 
 	bool _avail;
 	uint16_t _code;
