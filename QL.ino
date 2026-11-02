@@ -1,9 +1,7 @@
 #include <r65emu.h>
 #include <m68k.h>
 #include <dram.h>
-#include <hw_serial_kbd.h>
 #include <fnkey_kbd.h>
-#include <ansi_kbd.h>
 #include <flash_filer.h>
 
 #include "kbd_adapter.h"
@@ -25,9 +23,7 @@ Memory memory;
 m68k cpu(memory);
 Arduino machine(cpu);
 
-hw_serial_kbd hw(Serial);
-ansi_kbd ansi(hw);
-fnkey_kbd fk(ansi);
+fnkey_kbd fk(machine.console_keyboard());
 KeyboardAdapter keyboard(fk);
 IO io(keyboard);
 Screen screen;
