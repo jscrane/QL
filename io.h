@@ -2,7 +2,7 @@
 
 class IO: public Memory::Device, public Pollable {
 public:
-	IO(Keyboard &kbd): Memory::Device(0x10000), _kbd(kbd) {}
+	IO(KeyboardAdapter &kbd): Memory::Device(0x10000), _kbd(kbd) {}
 	void begin();
 	void reset();
 
@@ -56,7 +56,7 @@ private:
 	void receive_command_bit(uint8_t);
 	void send_response_bit(uint8_t);
 
-	Keyboard &_kbd;
+	KeyboardAdapter &_kbd;
 
 	enum IPCState {
 		Start,

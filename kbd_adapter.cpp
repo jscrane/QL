@@ -3,11 +3,14 @@
 
 #include <machine.h>
 #include <debugging.h>
-#include <serial_kbd.h>
+#include <keys.h>
 
-#include "keyboard.h"
+#include "kbd_adapter.h"
+#include "ansi_kbd.h"
 
-static uint16_t keycodes[128] PROGMEM = {
+using namespace keys;
+
+static uint16_t ascii_keycodes[128] PROGMEM = {
 	0x0236, 0x0000, 0x0000, 0x022b, 0x0000, 0x0000, 0x0000, 0x0000,		// 0x00
 	0x0231, 0x0013, 0x0000, 0x0000, 0x0000, 0x0030, 0x0039, 0x003b,		// 0x08
 	0x003c, 0x0038, 0x003d, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,		// 0x10
@@ -26,21 +29,40 @@ static uint16_t keycodes[128] PROGMEM = {
 	0x0003, 0x0016, 0x0029, 0x0420, 0x0435, 0x0428, 0x042d, 0x0234,		// 0x78
 };
 
-bool Keyboard::available() {
+//	up	down	right	left	__	__	__	__
+//	__	__	f1	f2	f3	f4	f5	__
+static uint16_t special_keycodes[16] PROGMEM = {
+	0x0032, 0x0037, 0x0034, 0x0031, 0x0000, 0x0000, 0x0000, 0x0000,		// 0x00
+	0x0000, 0x0000, 0x0039, 0x003b, 0x003c, 0x0038, 0x003d, 0x0000,		// 0x08
+};
+
+constexpr uint16_t QL_CTRL  = 0x200;
+constexpr uint16_t QL_SHIFT = 0x400;
+
+bool KeyboardAdapter::has_key_code() {
 
 	if (_avail)
 		return true;
 
-	while (_serial.available()) {
-		uint8_t key = _serial.read();
+	while (available()) {
 
-		if (key > 0x7f)
+		int k = read();
+		if (k < 0)
 			continue;
 
-		uint16_t code = pgm_read_word(&keycodes[key]);
+		uint16_t key = k, code = 0;
+		if (key < 0x80)
+			code = pgm_read_word(&ascii_keycodes[key]);
+		else {
+			uint16_t skey = (k & KEY_MASK);
+			if (skey >= 0x100 && skey < 0x110) {
+				code = pgm_read_word(&special_keycodes[skey - 0x100]);
+				if (k & MOD_SHIFT) code |= QL_SHIFT;
+				else if (k & MOD_CTRL) code |= QL_CTRL;
+			}
+		}
 
 		DBG_EMU("%02x %04x", key, code);
-
 		if (code == 0)
 			continue;
 
@@ -52,7 +74,7 @@ bool Keyboard::available() {
 	return false;
 }
 
-uint16_t Keyboard::read() {
+uint16_t KeyboardAdapter::key_code() {
 
 	if (!_avail)
 		return 0xffff;
