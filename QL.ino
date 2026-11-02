@@ -23,8 +23,7 @@ Memory memory;
 m68k cpu(memory);
 Arduino machine(cpu);
 
-fnkey_kbd fk(machine.console_keyboard());
-KeyboardAdapter keyboard(fk);
+KeyboardAdapter keyboard(machine.console_keyboard());
 IO io(keyboard);
 Screen screen;
 
@@ -81,7 +80,7 @@ void setup() {
 	machine.begin();
 	user_ram.begin();
 	screen.begin();
-	fk.register_fnkey_handler(F6 | F7 | F8 | F9, function_keys);
+	keyboard.register_fnkey_handler(F6 | F7 | F8 | F9, function_keys);
 
 	io.set_display_ctrl([](uint8_t b) { screen.set_mode(b); });
 	io.set_interrupt_cpu([](bool b) { cpu.set_interrupt_level(b? 2: 0); });

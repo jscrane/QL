@@ -1,20 +1,20 @@
 #pragma once
 
-#include <keyboard.h>
+#include <fnkey_kbd.h>
 
-class KeyboardAdapter {
+class KeyboardAdapter: private fnkey_kbd {
 public:
-	KeyboardAdapter(keyboard &kbd): _kbd(kbd) {}
+	KeyboardAdapter(keyboard &kbd): fnkey_kbd(kbd) {}
 
-	void reset() { _kbd.reset(); }
+	using fnkey_kbd::reset;
 
-	bool available();
+	using fnkey_kbd::register_fnkey_handler;
 
-	uint16_t read();
+	bool has_key_code();
+
+	uint16_t key_code();
 
 private:
-	keyboard &_kbd;
-
 	bool _avail;
 	uint16_t _code;
 };

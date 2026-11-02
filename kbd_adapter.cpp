@@ -39,14 +39,14 @@ static uint16_t special_keycodes[16] PROGMEM = {
 constexpr uint16_t QL_CTRL  = 0x200;
 constexpr uint16_t QL_SHIFT = 0x400;
 
-bool KeyboardAdapter::available() {
+bool KeyboardAdapter::has_key_code() {
 
 	if (_avail)
 		return true;
 
-	while (_kbd.available()) {
+	while (available()) {
 
-		int k = _kbd.read();
+		int k = read();
 		if (k < 0)
 			continue;
 
@@ -74,7 +74,7 @@ bool KeyboardAdapter::available() {
 	return false;
 }
 
-uint16_t KeyboardAdapter::read() {
+uint16_t KeyboardAdapter::key_code() {
 
 	if (!_avail)
 		return 0xffff;

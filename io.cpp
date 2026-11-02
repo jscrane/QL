@@ -108,13 +108,13 @@ void IO::link_command(uint8_t cmd) {
 	case 1:
 		// response is 8 bits
 		_rsp_bit = 0x0080;
-		_rsp = 0x40 | _kbd.available();
+		_rsp = 0x40 | _kbd.has_key_code();
 		break;
 	case 8:
-		if (_kbd.available()) {
+		if (_kbd.has_key_code()) {
 			// response is 16 bits
 			_rsp_bit = 0x8000;
-			_rsp = (1 << 12) | _kbd.read();
+			_rsp = (1 << 12) | _kbd.key_code();
 		} else {
 			// response is 4 bits
 			_rsp_bit = 0x0008;
@@ -129,7 +129,7 @@ void IO::link_command(uint8_t cmd) {
 
 void IO::poll() {
 
-	if (_kbd.available())
+	if (_kbd.has_key_code())
 		_irq_status |= INT_INTERFACE;
 
 	if (_mdv.gap())
