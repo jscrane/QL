@@ -43,19 +43,19 @@ static void file_status() {
 	screen.status(buf);
 }
 
-static void function_keys(uint8_t key) {
+static void function_keys(uint16_t key) {
 
 	switch (key) {
-	case 6:
+	case F6:
 		machine.reset();
 		break;
-	case 7:
+	case F7:
 		images.next_file("img", readwrite);
 		break;
-	case 8:
+	case F8:
 		images.rewind();
 		break;
-	case 9:
+	case F9:
 		images.next_device();
 		break;
 	}

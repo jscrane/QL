@@ -12,7 +12,3 @@ So far, this has only been tested on an Olimex `esp32-sbc-fabgl` board.
 - `F7` advance to next image
 - `F8` rewind to first image
 - `F9` select device for image
-
-## Credits
-
-Weird-ass homebrew VGA mode courtesy of ChatGPT!
