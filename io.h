@@ -54,6 +54,9 @@ private:
 	void interrupt_acknowledge(uint8_t);
 	void link_command(uint8_t);
 	void receive_command_bit(uint8_t);
+	void receive_parameter_bit(uint8_t);
+	void expect_parameters(uint8_t, void (IO::*)(uint64_t));
+	void begin_response(uint8_t, uint16_t);
 	void send_response_bit(uint8_t);
 
 	KeyboardAdapter &_kbd;
@@ -61,12 +64,33 @@ private:
 	enum IPCState {
 		Start,
 		Command,
+		Parameters,
 		Response
 	} _ipc_state = Start;
 
-	uint8_t _cmd, _cmd_bits;
-	uint16_t _rsp, _rsp_bit;
-	uint8_t _comdata;
+	inline void state(IPCState s) { _ipc_state = s; }
+
+	enum IPCCommand {
+		STATUS = 1,
+		READ_KEYBOARD = 8,
+		READ_KEYBOARD_ROW = 9,
+		INIT_SOUND = 10,
+		KILL_SOUND = 11
+	};
+
+	// handlers
+	void (IO::*_cmd_handler)(uint64_t);
+	void status(uint64_t);
+	void read_keyboard(uint64_t);
+	void read_kbd_row(uint64_t);
+	void init_sound(uint64_t);
+	void kill_sound(uint64_t);
+
+	uint8_t _cmd = 0, _cmd_bits = 0;
+	uint8_t _param_bits = 0;
+	uint64_t _params;
+	uint16_t _rsp = 0, _rsp_bit = 0;
+	uint8_t _comdata = 0;
 	uint8_t _irq_status = 0, _irq_mask = 0;
 	uint32_t _rtc = 0;
 
