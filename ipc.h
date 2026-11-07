@@ -3,10 +3,11 @@
 #include <cstdint>
 
 class KeyboardAdapter;
+class SoundAdapter;
 
 class IPC {
 public:
-	IPC(KeyboardAdapter &kbd): _kbd(kbd) {}
+	IPC(KeyboardAdapter &kbd, SoundAdapter &snd): _kbd(kbd), _snd(snd) {}
 	void reset();
 
 	void write_link(uint8_t);
@@ -22,6 +23,7 @@ private:
 	void send_response_bit(uint8_t);
 
 	KeyboardAdapter &_kbd;
+	SoundAdapter &_snd;
 
 	enum IPCState {
 		Start,

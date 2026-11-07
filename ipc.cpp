@@ -6,6 +6,7 @@
 #include <debugging.h>
 
 #include "kbd_adapter.h"
+#include "snd_adapter.h"
 #include "ipc.h"
 
 void IPC::write_link(uint8_t b) {
@@ -136,7 +137,7 @@ void IPC::init_sound(uint64_t p) {
 
 void IPC::kill_sound(uint64_t) {
 	DBG_EMU("kill_sound");
-	// FIXME
+	_snd.stop();
 }
 
 bool IPC::pending() const { return _kbd.has_key_code(); }
