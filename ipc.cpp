@@ -98,7 +98,9 @@ void IPC::link_command(uint8_t cmd) {
 }
 
 void IPC::status(uint64_t) {
-	uint16_t rsp = 0x40 | (_snd.active() << 1) | _kbd.has_key_code();
+	uint16_t rsp = STATUS_MDV_WRITE_PROTECT;
+	if (_kbd.has_key_code()) rsp |= STATUS_KEY;
+	if (_snd.active()) rsp |= STATUS_SOUND;
 	begin_response(8, rsp);
 }
 

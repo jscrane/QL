@@ -5,6 +5,17 @@
 class KeyboardAdapter;
 class SoundAdapter;
 
+// bits in the reply to the STATUS command
+enum StatusBit : uint8_t {
+	STATUS_KEY               = 0x01,	// a key is pressed (we report: a key code is waiting)
+	STATUS_SOUND             = 0x02,	// sound is being produced (what BEEPING reads)
+	STATUS_SER1_RX           = 0x10,	// a byte has been read from serial port 1 (not emulated)
+	STATUS_SER2_RX           = 0x20,	// the same for port 2 (not emulated)
+	STATUS_MDV_WRITE_PROTECT = 0x40,	// cartridge write-protected (also reported when no cartridge
+						// is present). Always set: with no microdrive emulated, this
+						// stops QDOS trying to boot from it.
+};
+
 class IPC {
 public:
 	IPC(KeyboardAdapter &kbd, SoundAdapter &snd): _kbd(kbd), _snd(snd) {}

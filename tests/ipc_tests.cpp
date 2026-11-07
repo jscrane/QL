@@ -10,7 +10,7 @@
 #include "kbd_adapter.h"
 #include "ipc.h"
 
-// a serial_kbd that returns a scripted sequence of characters
+// a keyboard that returns a scripted sequence of characters
 class scripted_kbd: public keyboard {
 public:
 	void push(int c) { _q.push_back(c); }
@@ -183,6 +183,32 @@ static void test_reset_stops_sound() {
 	CHECK_EQ(r.trace.events().back().hz, 0);
 }
 
+const uint8_t SOUND_BIT = 2;
+
+static void test_status_reports_sound() {
+	Rig r;
+	send_command(r.ipc, STATUS);
+	CHECK_EQ(read_response(r.ipc, 8) & SOUND_BIT, 0);
+
+	send_command(r.ipc, INIT_SOUND);
+	send_bits(r.ipc, 0x0b0b0000e8030000ull, 64);
+	send_command(r.ipc, STATUS);
+	CHECK_EQ(read_response(r.ipc, 8) & SOUND_BIT, SOUND_BIT);
+
+	now += 72000;
+	send_command(r.ipc, STATUS);
+	CHECK_EQ(read_response(r.ipc, 8) & SOUND_BIT, 0);   // timed tone has expired
+}
+
+static void test_status_clear_after_kill() {
+	Rig r;
+	send_command(r.ipc, INIT_SOUND);
+	send_bits(r.ipc, 0x0b0b0000e8030000ull, 64);
+	send_command(r.ipc, KILL_SOUND);
+	send_command(r.ipc, STATUS);
+	CHECK_EQ(read_response(r.ipc, 8) & SOUND_BIT, 0);   // no gap between kill and status
+}
+
 int main() {
 	RUN(test_status_no_key);
 	RUN(test_commands_back_to_back);
@@ -195,5 +221,7 @@ int main() {
 	RUN(test_kill_sound);
 	RUN(test_reset_mid_parameters);
 	RUN(test_reset_stops_sound);
+	RUN(test_status_reports_sound);
+	RUN(test_status_clear_after_kill);
 	return failures != 0;
 }

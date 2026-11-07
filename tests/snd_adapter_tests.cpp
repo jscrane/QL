@@ -84,5 +84,5 @@ int main() {
 	RUN(test_stop_when_idle_is_silent);
 	RUN(test_new_beep_replaces_old);
 	RUN(test_clock_wraparound);
-	return failures;
+	return failures != 0;
 }
