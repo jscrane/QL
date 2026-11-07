@@ -5,6 +5,7 @@
 #include <flash_filer.h>
 
 #include "kbd_adapter.h"
+#include "ipc.h"
 #include "microdrive.h"
 #include "io.h"
 #include "screen.h"
@@ -24,7 +25,9 @@ m68k cpu(memory);
 Arduino machine(cpu);
 
 KeyboardAdapter keyboard(machine.console_keyboard());
-IO io(keyboard);
+IPC ipc(keyboard);
+Microdrive mdv;
+IO io(ipc, mdv);
 Screen screen;
 
 flash_filer images(PROGRAMS, 2);
