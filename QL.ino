@@ -26,7 +26,7 @@ m68k cpu(memory);
 Arduino machine(cpu);
 
 KeyboardAdapter keyboard(machine.console_keyboard());
-SoundAdapter sound(machine.sound_pwm());
+SoundAdapter sound(machine.sound_pwm(), []() { return machine.microseconds(); });
 IPC ipc(keyboard, sound);
 Microdrive mdv;
 IO io(ipc, mdv);

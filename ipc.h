@@ -20,7 +20,7 @@ private:
 	void receive_parameter_bit(uint8_t);
 	void expect_parameters(uint8_t, void (IPC::*)(uint64_t));
 	void begin_response(uint8_t, uint16_t);
-	void send_response_bit(uint8_t);
+	void send_next_response_bit();
 
 	KeyboardAdapter &_kbd;
 	SoundAdapter &_snd;

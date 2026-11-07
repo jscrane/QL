@@ -19,7 +19,7 @@ void IPC::write_link(uint8_t b) {
 	else if (_ipc_state == Parameters)
 		receive_parameter_bit(b);
 	else if (b == 0x0e)
-		send_response_bit(b);
+		send_next_response_bit();
 }
 
 void IPC::receive_command_bit(uint8_t b) {
@@ -56,7 +56,7 @@ void IPC::expect_parameters(uint8_t nbits, void (IPC::*handler)(uint64_t)) {
 	state(Parameters);
 }
 
-void IPC::send_response_bit(uint8_t b) {
+void IPC::send_next_response_bit() {
 
 	bool bit = _rsp & _rsp_bit;
 	_comdata = bit? 0x80: 0x00;
@@ -98,7 +98,7 @@ void IPC::link_command(uint8_t cmd) {
 }
 
 void IPC::status(uint64_t) {
-	uint16_t rsp = 0x40 | _kbd.has_key_code();
+	uint16_t rsp = 0x40 | (_snd.active() << 1) | _kbd.has_key_code();
 	begin_response(8, rsp);
 }
 
@@ -123,16 +123,22 @@ void IPC::read_kbd_row(uint64_t params) {
 }
 
 void IPC::init_sound(uint64_t p) {
+
 	DBG_EMU("init_sound: 0x%" PRIx64, p);
-	uint8_t  pitch1   = (p >> 56) & 0xff;
-	uint8_t  pitch2   = (p >> 48) & 0xff;
-	uint16_t interval = __builtin_bswap16((p >> 32) & 0xffff);   // assumed same order as duration
-	uint16_t duration = __builtin_bswap16((p >> 16) & 0xffff);
-	uint8_t  step     = (p >> 12) & 0xf;
-	uint8_t  wrap     = (p >> 8)  & 0xf;
-	uint8_t  random   = (p >> 4)  & 0xf;
-	uint8_t  fuzzy    =  p        & 0xf;
-	DBG_EMU("init_sound: pitch1=%02x pitch2=%02x interval=%04x duration=%04x step=%02x wrap=%02x random=%02x fuzzy=%02x", pitch1, pitch2, interval, duration, step, wrap, random, fuzzy);
+
+	SoundAdapter::Params params;
+	params.pitch1 = (p >> 56) & 0xff;
+	params.pitch2 = (p >> 48) & 0xff;
+	params.interval = __builtin_bswap16((p >> 32) & 0xffff);
+	params.duration = __builtin_bswap16((p >> 16) & 0xffff);
+	params.step = (p >> 12) & 0xf;
+	params.wrap = (p >> 8) & 0xf;
+	params.random = (p >> 4) & 0xf;
+	params.fuzzy = p & 0xf;
+
+	DBG_EMU("init_sound: pitch1=%02x pitch2=%02x interval=%04x duration=%04x step=%02x wrap=%02x random=%02x fuzzy=%02x", 
+			params.pitch1, params.pitch2, params.interval, params.duration, params.step, params.wrap, params.random, params.fuzzy);
+	_snd.play(params);
 }
 
 void IPC::kill_sound(uint64_t) {
@@ -145,6 +151,8 @@ bool IPC::pending() const { return _kbd.has_key_code(); }
 void IPC::reset() {
 
 	_kbd.reset();
+	_snd.stop();
+
 	_cmd_handler = nullptr;
 	_cmd = _cmd_bits = _comdata = _param_bits = 0;
 	_params = 0;

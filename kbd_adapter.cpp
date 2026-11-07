@@ -1,9 +1,9 @@
 #include <cstdint>
-#include <HardwareSerial.h>
 
 #include <machine.h>
 #include <debugging.h>
 #include <keys.h>
+#include <compat.h>
 
 #include "kbd_adapter.h"
 #include "ansi_kbd.h"
