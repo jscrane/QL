@@ -9,22 +9,35 @@
 #include "snd_adapter.h"
 #include "ipc.h"
 
+inline bool data_bit(uint8_t b) { return b & 0x02; }
+
+inline bool start_bit(uint8_t b) { return b == 0x01; }
+
+inline bool next_response_bit(uint8_t b) { return b == 0x0e; }
+
 void IPC::write_link(uint8_t b) {
 
-	if (_ipc_state == Start) {
-		if (b == 0x01)
+	switch (_ipc_state) {
+	case Start:
+		if (start_bit(b))
 			state(Command);
-	} else if (_ipc_state == Command)
-		receive_command_bit(b);
-	else if (_ipc_state == Parameters)
-		receive_parameter_bit(b);
-	else if (b == 0x0e)
-		send_next_response_bit();
+		break;
+	case Command:
+		receive_command_bit(data_bit(b));
+		break;
+	case Parameters:
+		receive_parameter_bit(data_bit(b));
+		break;
+	case Response:
+		if (next_response_bit(b))
+			send_next_response_bit();
+		break;
+	}
 }
 
-void IPC::receive_command_bit(uint8_t b) {
+void IPC::receive_command_bit(bool bit) {
 
-	_cmd = (_cmd << 1) + (b == 0x0e);
+	_cmd = (_cmd << 1) + bit;
 	if (++_cmd_bits == 4) {
 		uint8_t cmd = _cmd;
 		_cmd = 0;
@@ -33,9 +46,9 @@ void IPC::receive_command_bit(uint8_t b) {
 	}
 }
 
-void IPC::receive_parameter_bit(uint8_t b) {
+void IPC::receive_parameter_bit(bool bit) {
 
-	_params = (_params << 1) + (b == 0x0e);
+	_params = (_params << 1) + bit;
 	if (--_param_bits == 0) {
 		state(Command);
 		(this->*_cmd_handler)(_params);
@@ -58,8 +71,7 @@ void IPC::expect_parameters(uint8_t nbits, void (IPC::*handler)(uint64_t)) {
 
 void IPC::send_next_response_bit() {
 
-	bool bit = _rsp & _rsp_bit;
-	_comdata = bit? 0x80: 0x00;
+	_comdata = (_rsp & _rsp_bit);
 	_rsp_bit >>= 1;
 	if (_rsp_bit == 0)
 		state(Command);
@@ -156,7 +168,8 @@ void IPC::reset() {
 	_snd.stop();
 
 	_cmd_handler = nullptr;
-	_cmd = _cmd_bits = _comdata = _param_bits = 0;
+	_cmd = _cmd_bits = _param_bits = 0;
+	_comdata = false;
 	_params = 0;
 	_rsp = _rsp_bit = 0;
 	state(Start);

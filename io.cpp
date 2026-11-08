@@ -46,7 +46,8 @@ IO::operator uint8_t() {
 		b = _irq_status;
 		break;
 	case MDV_RS_STAT:
-		b = _ipc.comdata();
+		if (_ipc.comdata())
+			b |= 0x80;
 		break;
 	case RTC_BYTE0:
 		b = (_rtc >> 24) & 0xff;

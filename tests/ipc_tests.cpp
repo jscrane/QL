@@ -54,7 +54,7 @@ static unsigned read_response(IPC &ipc, int nbits) {
 	unsigned v = 0;
 	for (int i = 0; i < nbits; ++i) {
 		ipc.write_link(0x0e);
-		v = (v << 1) | ((ipc.comdata() & 0x80) ? 1 : 0);
+		v = (v << 1) | ipc.comdata();
 	}
 	return v;
 }

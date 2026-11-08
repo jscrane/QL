@@ -22,13 +22,13 @@ public:
 	void reset();
 
 	void write_link(uint8_t);
-	uint8_t comdata() const { return _comdata; }
+	bool comdata() const { return _comdata; }
 	bool pending() const;
 
 private:
 	void link_command(uint8_t);
-	void receive_command_bit(uint8_t);
-	void receive_parameter_bit(uint8_t);
+	void receive_command_bit(bool);
+	void receive_parameter_bit(bool);
 	void expect_parameters(uint8_t, void (IPC::*)(uint64_t));
 	void begin_response(uint8_t, uint16_t);
 	void send_next_response_bit();
@@ -64,6 +64,6 @@ private:
 	uint8_t _cmd = 0, _cmd_bits = 0;
 	uint8_t _param_bits = 0;
 	uint64_t _params = 0;
-	uint8_t _comdata = 0;
+	bool _comdata = false;
 	uint16_t _rsp = 0, _rsp_bit = 0;
 };
