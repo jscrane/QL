@@ -46,6 +46,8 @@ IO::operator uint8_t() {
 		b = _irq_status;
 		break;
 	case MDV_RS_STAT:
+		if (_mdv.gap())
+			b |= 0x08;
 		if (_ipc.comdata())
 			b |= 0x80;
 		break;
