@@ -110,7 +110,8 @@ void IPC::link_command(uint8_t cmd) {
 }
 
 void IPC::status(uint64_t) {
-	uint16_t rsp = STATUS_MDV_WRITE_PROTECT;
+
+	uint16_t rsp = 0x40;		// not-connected but always set (from 8049 listing)
 	if (_kbd.has_key_code()) rsp |= STATUS_KEY;
 	if (_snd.active()) rsp |= STATUS_SOUND;
 	begin_response(8, rsp);

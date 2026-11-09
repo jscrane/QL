@@ -11,9 +11,6 @@ enum StatusBit : uint8_t {
 	STATUS_SOUND             = 0x02,	// sound is being produced (what BEEPING reads)
 	STATUS_SER1_RX           = 0x10,	// a byte has been read from serial port 1 (not emulated)
 	STATUS_SER2_RX           = 0x20,	// the same for port 2 (not emulated)
-	STATUS_MDV_WRITE_PROTECT = 0x40,	// cartridge write-protected (also reported when no cartridge
-						// is present). Always set: with no microdrive emulated, this
-						// stops QDOS trying to boot from it.
 };
 
 class IPC {
