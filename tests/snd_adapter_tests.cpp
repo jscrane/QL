@@ -76,6 +76,50 @@ static void test_clock_wraparound() {
 	now = (UINT32_MAX - 100) + 72000;  CHECK(!snd.active());
 }
 
+static SoundAdapter::Params sweep(uint8_t p1, uint8_t p2, uint16_t interval, int8_t step) {
+	SoundAdapter::Params p{};
+	p.pitch1 = p1;
+	p.pitch2 = p2;
+	p.interval = interval;
+	p.step = step;
+	return p;
+}
+
+static uint32_t us(uint16_t units) { return uint32_t(units) * 72; }   // 72 us per unit
+
+static void test_no_sweep_when_pitches_equal() {
+	auto p = sweep(20, 20, 1000, 4);
+	CHECK_EQ(SoundAdapter::pitch_at(p, 0), 20);
+	CHECK_EQ(SoundAdapter::pitch_at(p, us(5000)), 20);
+}
+
+static void test_no_sweep_when_interval_zero() {
+	auto p = sweep(20, 100, 0, 4);
+	CHECK_EQ(SoundAdapter::pitch_at(p, us(5000)), 20);
+}
+
+static void test_no_sweep_when_step_zero() {
+	auto p = sweep(20, 100, 1000, 0);
+	CHECK_EQ(SoundAdapter::pitch_at(p, us(5000)), 20);
+}
+
+static void test_no_sweep_when_pitch2_is_a_higher_tone() {
+	auto p = sweep(100, 20, 1000, 4);          // pitch2 numerically lower = higher tone
+	CHECK_EQ(SoundAdapter::pitch_at(p, us(5000)), 100);
+}
+
+static void test_first_leg_of_sweep() {
+	// HYPOTHESIS: from pitch1, the IPC pitch byte moves by `step` once per `interval`,
+	// the first step landing at t = interval, heading for pitch2. First leg only.
+	auto p = sweep(20, 100, 1000, 4);
+	uint32_t iv = us(1000);
+	CHECK_EQ(SoundAdapter::pitch_at(p, 0), 20);
+	CHECK_EQ(SoundAdapter::pitch_at(p, iv - 1), 20);       // not yet
+	CHECK_EQ(SoundAdapter::pitch_at(p, iv), 24);
+	CHECK_EQ(SoundAdapter::pitch_at(p, 2 * iv), 28);
+	CHECK_EQ(SoundAdapter::pitch_at(p, 10 * iv), 60);      // still short of pitch2
+}
+
 int main() {
 	RUN(test_pitch_to_hz);
 	RUN(test_timed_tone);
@@ -84,5 +128,10 @@ int main() {
 	RUN(test_stop_when_idle_is_silent);
 	RUN(test_new_beep_replaces_old);
 	RUN(test_clock_wraparound);
+	RUN(test_no_sweep_when_pitches_equal);
+	RUN(test_no_sweep_when_interval_zero);
+	RUN(test_no_sweep_when_step_zero);
+	RUN(test_no_sweep_when_pitch2_is_a_higher_tone);
+	RUN(test_first_leg_of_sweep);
 	return failures != 0;
 }

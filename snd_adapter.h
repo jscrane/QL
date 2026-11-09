@@ -22,6 +22,7 @@ public:
 	bool active() const;
 
 	static unsigned pitch_to_hz(uint8_t ipc_pitch);
+	static uint8_t pitch_at(const Params &, uint32_t elapsed_us);   // IPC pitch byte at a given time
 
 private:
 	static constexpr uint32_t UNIT_US = 72;
