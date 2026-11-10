@@ -101,6 +101,7 @@ void setup() {
 
 	machine.set_cpu_debugging([]() { return debug_cpu; });
 	machine.register_pollable(io);
+	machine.register_pollable(sound);
 	machine.register_reset_handler(reset);
 	machine.reset();
 }
