@@ -4,12 +4,13 @@ CXXFLAGS = -g -Wall -Wextra -fsanitize=address,undefined -fno-omit-frame-pointer
 LDFLAGS  = -fsanitize=address,undefined
 vpath %.cpp .. $(R65EMU)/src
 
-TESTS := snd_adapter_tests ipc_tests
+TESTS := beep_model_tests snd_adapter_tests ipc_tests
 
 all: $(TESTS)
 
-snd_adapter_tests: snd_adapter_tests.o snd_adapter.o
-ipc_tests: ipc_tests.o ipc.o snd_adapter.o kbd_adapter.o
+beep_model_tests: beep_model_tests.o beep_model.o
+snd_adapter_tests: snd_adapter_tests.o snd_adapter.o beep_model.o
+ipc_tests: ipc_tests.o ipc.o snd_adapter.o kbd_adapter.o beep_model.o
 
 $(TESTS):
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)

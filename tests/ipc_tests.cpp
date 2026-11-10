@@ -125,32 +125,34 @@ static void test_unknown_command_keeps_sync() {
 }
 
 // ---- sound ----
-
 static void test_init_sound_beep_1000_10() {
 	Rig r;
 	send_command(r.ipc, INIT_SOUND);
-	send_bits(r.ipc, 0x0b0b0000e8030000ull, 64);   // captured from BEEP 1000,10 on the real ROM
+	send_bits(r.ipc, 0x0b0b0000e8030000ull, 64);   // captured from BEEP 1000,10 on QDOS JS
 	CHECK_EQ(r.trace.events().size(), 1);
-	CHECK_EQ(r.trace.events()[0].hz, 608);
-	CHECK_EQ(r.trace.events()[0].ms, 72);
+	CHECK_EQ(r.trace.events()[0].hz, 560);          // a timed tone sounds lower than BEEP 0,10 (611 Hz)
 	CHECK(r.snd.active());
-	check_in_sync(r);                          // exactly 64 parameter bits consumed
+	check_in_sync(r);                               // exactly 64 parameter bits consumed
+	now += 50000;  CHECK(r.snd.active());           // the firmware's accumulator ends it at about 52.6 ms
+	now += 5000;   CHECK(!r.snd.active());
 }
 
 static void test_init_sound_other_pitches() {
 	{
-		Rig r;                                 // BEEP 258,0: IPC pitch 1, duration 0x0102
+		Rig r;                                      // BEEP 258,0: IPC pitch 1, duration 0x0102
 		send_command(r.ipc, INIT_SOUND);
 		send_bits(r.ipc, 0x0101000002010000ull, 64);
-		CHECK_EQ(r.trace.events()[0].hz, 1313);
-		CHECK_EQ(r.trace.events()[0].ms, 19);      // 258 * 72 us = 18.6 ms, rounded up
+		CHECK_EQ(r.trace.events()[0].hz, 1095);
+		now += 15000;  CHECK(r.snd.active());       // ends at about 16.8 ms
+		now += 3000;   CHECK(!r.snd.active());
 	}
 	{
-		Rig r;                                 // BEEP 258,255: IPC pitch wraps to 0 (= 256)
+		Rig r;                                      // BEEP 258,255: pitch wraps to 0 (= 256)
 		send_command(r.ipc, INIT_SOUND);
 		send_bits(r.ipc, 0x0000000002010000ull, 64);
 		CHECK_EQ(r.trace.events()[0].hz, 43);
-		CHECK_EQ(r.trace.events()[0].ms, 19);
+		now += 11000;  CHECK(r.snd.active());       // ends after one half-cycle, at about 11.4 ms
+		now += 1000;   CHECK(!r.snd.active());
 	}
 }
 
