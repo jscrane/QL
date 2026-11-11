@@ -14,7 +14,7 @@ PSRAM := enabled
 include $(CORE).mk
 
 %.h: roms/%.rom
-	~/src/emul8/util/makerom -bp $< $* > $@
+	makerom -bp $< $* > $@
 
 realclean: clean
 	rm -f serialout.txt
