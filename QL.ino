@@ -5,17 +5,20 @@
 #include <flash_filer.h>
 
 #include "kbd_adapter.h"
+#include "snd_adapter.h"
+#include "ipc.h"
 #include "microdrive.h"
 #include "io.h"
 #include "screen.h"
-#include "js.h"
+
+#include "config.h"
+#include QLROM_HEADER
 #include "tkii220.h"
 #include "cst_qdisc_116.h"
 #include "qdisc.h"
-#include "config.h"
 
 dram<USER_RAM> user_ram;
-prom qdos(js, sizeof(js));
+prom qdos(QLROM, sizeof(QLROM));
 prom tkii(tkii220, sizeof(tkii220));
 prom qdisc(cst_qdisc_116, sizeof(cst_qdisc_116));
 
@@ -24,7 +27,10 @@ m68k cpu(memory);
 Arduino machine(cpu);
 
 KeyboardAdapter keyboard(machine.console_keyboard());
-IO io(keyboard);
+SoundAdapter sound(machine.sound_pwm(), []() { return machine.microseconds(); });
+IPC ipc(keyboard, sound);
+Microdrive mdv;
+IO io(ipc, mdv);
 Screen screen;
 
 flash_filer images(PROGRAMS, 2);
@@ -43,19 +49,19 @@ static void file_status() {
 	screen.status(buf);
 }
 
-static void function_keys(uint8_t key) {
+static void function_keys(uint16_t key) {
 
 	switch (key) {
-	case 6:
+	case F6:
 		machine.reset();
 		break;
-	case 7:
+	case F7:
 		images.next_file("img", readwrite);
 		break;
-	case 8:
+	case F8:
 		images.rewind();
 		break;
-	case 9:
+	case F9:
 		images.next_device();
 		break;
 	}
@@ -71,6 +77,7 @@ static void reset(bool sd) {
 
 	io.reset();
 	screen.reset();
+	images.reset();
 	floppy.reset();
 	debug_cpu = false;
 }
@@ -96,6 +103,7 @@ void setup() {
 
 	machine.set_cpu_debugging([]() { return debug_cpu; });
 	machine.register_pollable(io);
+	machine.register_pollable(sound);
 	machine.register_reset_handler(reset);
 	machine.reset();
 }

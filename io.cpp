@@ -4,8 +4,8 @@
 #include <memory.h>
 #include <debugging.h>
 
-#include "kbd_adapter.h"
 #include "microdrive.h"
+#include "ipc.h"
 #include "io.h"
 
 bool debug_io = false;
@@ -20,13 +20,7 @@ void IO::operator=(uint8_t b) {
 			_display_ctrl(b);
 		break;
 	case IPC_LINK_CTRL:
-		if (_ipc_state == IPCState::Start) {
-			if (b == 0x01)
-				_ipc_state = IPCState::Command;
-		} else if (_ipc_state == IPCState::Command)
-			receive_command_bit(b);
-		else if (b == 0x0e)
-			send_response_bit(b);
+		_ipc.write_link(b);
 		break;
 	case INT_CTRL:
 		interrupt_acknowledge(b);
@@ -52,7 +46,10 @@ IO::operator uint8_t() {
 		b = _irq_status;
 		break;
 	case MDV_RS_STAT:
-		b = _comdata;
+		if (_mdv.gap())
+			b |= 0x08;
+		if (_ipc.comdata())
+			b |= 0x80;
 		break;
 	case RTC_BYTE0:
 		b = (_rtc >> 24) & 0xff;
@@ -67,7 +64,7 @@ IO::operator uint8_t() {
 		b = _rtc & 0xff;
 		break;
 	default:
-		DBG_EMU("< IO: unimplmented %06x", _acc);
+		DBG_EMU("< IO: unimplemented %06x", _acc);
 		break;
 	}
 
@@ -76,60 +73,9 @@ IO::operator uint8_t() {
 	return b;
 }
 
-void IO::receive_command_bit(uint8_t b) {
-
-	if (debug_io) DBG_EMU("cmd bit %d: %02x", _cmd_bits, b);
-	_cmd = (_cmd << 1) + (b == 0x0e);
-	if (++_cmd_bits == 4) {
-		uint8_t cmd = _cmd;
-		_cmd = 0;
-		_cmd_bits = 0;
-		link_command(cmd);
-	}
-}
-
-void IO::send_response_bit(uint8_t b) {
-
-	bool bit = _rsp & _rsp_bit;
-	if (debug_io) DBG_EMU("rsp %d %02x", bit, _rsp_bit);
-	_comdata = bit? 0x80: 0x00;
-	_rsp_bit >>= 1;
-	if (_rsp_bit == 0)
-		_ipc_state = IPCState::Command;
-}
-
-void IO::link_command(uint8_t cmd) {
-
-	if (debug_io) DBG_EMU("link_command %02x", cmd);
-
-	_ipc_state = IPCState::Response;
-
-	switch (cmd) {
-	case 1:
-		// response is 8 bits
-		_rsp_bit = 0x0080;
-		_rsp = 0x40 | _kbd.has_key_code();
-		break;
-	case 8:
-		if (_kbd.has_key_code()) {
-			// response is 16 bits
-			_rsp_bit = 0x8000;
-			_rsp = (1 << 12) | _kbd.key_code();
-		} else {
-			// response is 4 bits
-			_rsp_bit = 0x0008;
-			_rsp = 0;
-		}
-		break;
-	default:
-		DBG_EMU("unimplemented link_command %02x", cmd);
-		break;
-	}
-}
-
 void IO::poll() {
 
-	if (_kbd.has_key_code())
+	if (_ipc.pending())
 		_irq_status |= INT_INTERFACE;
 
 	if (_mdv.gap())
@@ -159,11 +105,8 @@ void IO::begin() {
 void IO::reset() {
 
 	_mdv.reset();
-	_kbd.reset();
-
-	_ipc_state = Start;
-	_irq_status = 0;
-	_irq_mask = 0;
+	_ipc.reset();
+	_irq_status = _irq_mask = 0;
 	_rtc = 0;
 }
 

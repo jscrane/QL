@@ -1,8 +1,11 @@
 #pragma once
 
+class IPC;
+class Microdrive;
+
 class IO: public Memory::Device, public Pollable {
 public:
-	IO(KeyboardAdapter &kbd): Memory::Device(0x10000), _kbd(kbd) {}
+	IO(IPC &ipc, Microdrive &mdv): Memory::Device(0x10000), _ipc(ipc), _mdv(mdv) {}
 	void begin();
 	void reset();
 
@@ -52,23 +55,11 @@ private:
 	std::function<void(bool)> _interrupt_cpu;
 
 	void interrupt_acknowledge(uint8_t);
-	void link_command(uint8_t);
-	void receive_command_bit(uint8_t);
-	void send_response_bit(uint8_t);
 
-	KeyboardAdapter &_kbd;
 
-	enum IPCState {
-		Start,
-		Command,
-		Response
-	} _ipc_state = Start;
-
-	uint8_t _cmd, _cmd_bits;
-	uint16_t _rsp, _rsp_bit;
-	uint8_t _comdata;
 	uint8_t _irq_status = 0, _irq_mask = 0;
 	uint32_t _rtc = 0;
 
-	Microdrive _mdv;
+	IPC &_ipc;
+	Microdrive &_mdv;
 };
