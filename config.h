@@ -19,4 +19,4 @@
 
 // screen has its own 32kB
 #define USER_RAM	(TOTAL_RAM_KB - 32) * 1024
-#define QLROM_HEADER	STR(QLROM.h)
+#define QLROM_HEADER	STR(roms/QLROM.h)

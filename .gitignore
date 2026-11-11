@@ -3,3 +3,4 @@
 serialout.txt
 .*.swp
 *.elf
+roms/*.h
