@@ -10,12 +10,12 @@
 #include "microdrive.h"
 #include "io.h"
 #include "screen.h"
+#include "qdisc.h"
 
 #include "config.h"
 #include QLROM_HEADER
-#include "tkii220.h"
-#include "cst_qdisc_116.h"
-#include "qdisc.h"
+#include "roms/tkii220.h"
+#include "roms/cst_qdisc_116.h"
 
 dram<USER_RAM> user_ram;
 prom qdos(QLROM, sizeof(QLROM));

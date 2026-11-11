@@ -47,7 +47,11 @@ private:
 		READ_KEYBOARD = 8,
 		READ_KEYBOARD_ROW = 9,
 		INIT_SOUND = 10,
-		KILL_SOUND = 11
+		KILL_SOUND = 11,
+		SET_MDRS = 12,
+		SET_BAUD_RATE = 13,
+		RANDOM = 14,
+		TEST = 15,
 	};
 
 	// handlers
@@ -57,6 +61,10 @@ private:
 	void read_kbd_row(uint64_t);
 	void init_sound(uint64_t);
 	void kill_sound(uint64_t);
+	void mdrs(uint64_t);
+	void set_baud_rate(uint64_t);
+	void random(uint64_t);
+	void test(uint64_t);
 
 	uint8_t _cmd = 0, _cmd_bits = 0;
 	uint8_t _param_bits = 0;

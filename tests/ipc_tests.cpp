@@ -211,6 +211,35 @@ static void test_status_clear_after_kill() {
 	CHECK_EQ(read_response(r.ipc, 8) & SOUND_BIT, 0);   // no gap between kill and status
 }
 
+static void test_set_ipl1l_framing() {          // 0x0C: 4 parameter bits, no reply
+	Rig r;
+	send_command(r.ipc, 0xC);
+	send_bits(r.ipc, 0x1, 4);
+	check_in_sync(r);
+}
+
+static void test_set_baud_framing() {           // 0x0D: 4 parameter bits, no reply
+	Rig r;
+	send_command(r.ipc, 0xD);
+	send_bits(r.ipc, 0x1, 4);                   // 9600; only the low 3 bits matter
+	check_in_sync(r);
+}
+
+static void test_random_replies_16_bits() {     // 0x0E: no parameters, 16 reply bits
+	Rig r;
+	send_command(r.ipc, 0xE);
+	read_response(r.ipc, 16);
+	check_in_sync(r);                           // fails if fewer than 16 bits were queued
+}
+
+static void test_test_command_echoes() {        // 0x0F: 8 parameter bits, echoed back
+	Rig r;
+	send_command(r.ipc, 0xF);
+	send_bits(r.ipc, 0xA5, 8);
+	CHECK_EQ(read_response(r.ipc, 8), 0xA5);
+	check_in_sync(r);
+}
+
 int main() {
 	RUN(test_status_no_key);
 	RUN(test_commands_back_to_back);
@@ -225,5 +254,9 @@ int main() {
 	RUN(test_reset_stops_sound);
 	RUN(test_status_reports_sound);
 	RUN(test_status_clear_after_kill);
+	RUN(test_set_ipl1l_framing);
+	RUN(test_set_baud_framing);
+	RUN(test_random_replies_16_bits);
+	RUN(test_test_command_echoes);
 	return failures != 0;
 }

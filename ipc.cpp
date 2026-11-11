@@ -9,6 +9,8 @@
 #include "snd_adapter.h"
 #include "ipc.h"
 
+// see here: https://github.com/zechmer/ipc8049
+
 inline bool data_bit(uint8_t b) { return b & 0x02; }
 
 inline bool start_bit(uint8_t b) { return b == 0x01; }
@@ -103,6 +105,18 @@ void IPC::link_command(uint8_t cmd) {
 	case KILL_SOUND:
 		expect_parameters(0, &IPC::kill_sound);
 		break;
+	case SET_MDRS:
+		expect_parameters(4, &IPC::mdrs);
+		break;
+	case SET_BAUD_RATE:
+		expect_parameters(4, &IPC::set_baud_rate);
+		break;
+	case RANDOM:
+		expect_parameters(0, &IPC::random);
+		break;
+	case TEST:
+		expect_parameters(8, &IPC::test);
+		break;
 	default:
 		DBG_EMU("unimplemented ipc command %02x", cmd);
 		break;
@@ -159,6 +173,27 @@ void IPC::init_sound(uint64_t p) {
 void IPC::kill_sound(uint64_t) {
 	DBG_EMU("kill_sound");
 	_snd.stop();
+}
+
+void IPC::mdrs(uint64_t params) {
+	uint8_t data = (params & 0x0f);
+	DBG_EMU("mdrs: %01x", data);
+}
+
+void IPC::set_baud_rate(uint64_t params) {
+	uint8_t baud = (params & 0x0f);
+	DBG_EMU("set_baud_rate: %01x", baud);
+}
+
+void IPC::random(uint64_t) {
+	DBG_EMU("random: FIXME");
+	begin_response(16, 0xffff);
+}
+
+void IPC::test(uint64_t params) {
+	uint8_t t = (params & 0xff);
+	DBG_EMU("test: %02x", t);
+	begin_response(8, t);
 }
 
 bool IPC::pending() const { return _kbd.has_key_code(); }
