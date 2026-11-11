@@ -13,6 +13,8 @@ PSRAM := enabled
 
 include $(CORE).mk
 
+rom-headers: cst_qdisc_116.h JS.h MF_en.h min198_qem.h tkii220.h
+
 %.h: roms/%.rom
 	makerom -bp $< $* > $@
 
