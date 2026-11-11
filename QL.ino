@@ -10,14 +10,15 @@
 #include "microdrive.h"
 #include "io.h"
 #include "screen.h"
-#include "js.h"
+
+#include "config.h"
+#include QLROM_HEADER
 #include "tkii220.h"
 #include "cst_qdisc_116.h"
 #include "qdisc.h"
-#include "config.h"
 
 dram<USER_RAM> user_ram;
-prom qdos(js, sizeof(js));
+prom qdos(QLROM, sizeof(QLROM));
 prom tkii(tkii220, sizeof(tkii220));
 prom qdisc(cst_qdisc_116, sizeof(cst_qdisc_116));
 
@@ -76,6 +77,7 @@ static void reset(bool sd) {
 
 	io.reset();
 	screen.reset();
+	images.reset();
 	floppy.reset();
 	debug_cpu = false;
 }
