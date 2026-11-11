@@ -71,8 +71,14 @@ void SoundAdapter::apply() {
 	}
 
 	const unsigned hz = _model.hz();
-	if (hz != _hz) {
-		_sound.tone(hz);
-		_hz = hz;
-	}
+	if (hz == _hz)
+		return;
+
+	const uint32_t now = _clock();
+	if (_hz != 0 && now - _last_tune < MIN_RETUNE_US)   // too soon: keep the old tone, catch up at a later poll
+		return;
+
+	_sound.tone(hz);
+	_hz = hz;
+	_last_tune = now;
 }

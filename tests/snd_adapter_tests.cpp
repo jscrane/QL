@@ -108,12 +108,32 @@ static void test_sweep_followed_at_1ms_polling() {
 	}
 }
 
-static void test_fast_sweep_retunes_at_most_once_per_poll() {
+static void test_fast_sweep_is_rate_limited() {
+	// interval 0: a step every half-cycle (1 to 3 ms). Retuning the sink that often floods an ESP32's
+	// tone task and trips the watchdog, so the adapter samples the sweep instead.
 	Rig r;
-	r.snd.play(beep(20, 60, 0, 0, 4, 0));                  // interval 0: a step every half-cycle
-	r.run_ms(60);
-	CHECK(r.trace.events().size() > 5);
-	CHECK(r.trace.events().size() <= 61);
+	r.snd.play(beep(20, 60, 0, 0, 4, 0));
+	r.run_ms(200);
+	const auto &e = r.trace.events();
+	CHECK(e.size() > 10);                                  // still sweeping
+	CHECK(e.size() <= 200 / (SoundAdapter::MIN_RETUNE_US / 1000) + 1);
+	for (size_t i = 1; i < e.size(); i++)
+		CHECK(e[i].us - e[i - 1].us >= SoundAdapter::MIN_RETUNE_US);
+}
+
+static void test_slow_sweep_is_not_limited() {
+	Rig r;
+	r.snd.play(beep(20, 30, 1000, 0, 4, 0));               // a step every 45 ms
+	r.run_ms(300);
+	CHECK_EQ(r.trace.events().size(), 7);
+}
+
+static void test_new_beep_retunes_immediately() {
+	Rig r;
+	r.snd.play(simple(0, 10));
+	r.run_ms(2);
+	r.snd.play(simple(0, 40));                             // 2 ms later, well inside the limit
+	CHECK_EQ(r.trace.events().size(), 2);
 }
 
 int main() {
@@ -124,7 +144,9 @@ int main() {
 	RUN(test_never_ending_duration);
 	RUN(test_replace_and_stop);
 	RUN(test_sweep_followed_at_1ms_polling);
-	RUN(test_fast_sweep_retunes_at_most_once_per_poll);
+	RUN(test_fast_sweep_is_rate_limited);
+	RUN(test_slow_sweep_is_not_limited);
+	RUN(test_new_beep_retunes_immediately);
 	std::printf("%s\n", failures ? "FAILED" : "all passed");
 	return failures != 0;
 }
