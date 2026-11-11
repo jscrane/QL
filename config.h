@@ -11,4 +11,7 @@
 
 #define PROGRAMS	"/QL"
 
-#define USER_RAM	0x38000
+#define TOTAL_RAM_KB	640
+
+// screen has its own 32kB
+#define USER_RAM	(TOTAL_RAM_KB - 32) * 1024

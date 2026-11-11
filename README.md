@@ -1,6 +1,6 @@
 # QL
 
-An emulation of the Sinclair QL with 256kB of RAM and two double-density CST QDisc floppies.
+An emulation of the Sinclair QL with 640kB of RAM and two double-density CST QDisc floppies.
 
 So far, this has only been tested on an Olimex `esp32-sbc-fabgl` [board](https://www.olimex.com/Products/Retro-Computers/ESP32-SBC-FabGL/open-source-hardware).
 
