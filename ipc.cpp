@@ -9,6 +9,8 @@
 #include "snd_adapter.h"
 #include "ipc.h"
 
+// see here: https://github.com/zechmer/ipc8049
+
 inline bool data_bit(uint8_t b) { return b & 0x02; }
 
 inline bool start_bit(uint8_t b) { return b == 0x01; }
