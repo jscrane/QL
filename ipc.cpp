@@ -186,9 +186,8 @@ void IPC::set_baud_rate(uint64_t params) {
 }
 
 void IPC::random(uint64_t) {
-	DBG_EMU("random");
-	uint8_t x = (_machine->microseconds() & 0xff00) >> 8;
-	begin_response(8, x);
+	DBG_EMU("random: FIXME");
+	begin_response(16, 0xffff);
 }
 
 void IPC::test(uint64_t params) {
