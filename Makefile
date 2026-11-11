@@ -21,3 +21,4 @@ include $(CORE).mk
 
 realclean: clean
 	rm -f serialout.txt
+	$(MAKE) -C roms clean
