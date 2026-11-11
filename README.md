@@ -19,7 +19,8 @@ The `roms/` directory contains some original images downloaded from [here](https
 
 - `cst_qdisc_116.rom`: CST QDisc version 1.16 (this is the emulated version)
 - `cst_qdisc_118.rom`: CST QDisc version 1.18 (unscrambled: the original used a non-standard address mapping which made disassembly difficult)
-- `js.rom`: QDOS rom version `JS`
+- `JS.rom`: QDOS rom version `JS` (1.10)
+- `MF_en.rom`: QDOS rom version `MF` (1.14)
 - `tkii220.rom`: QJUMP Toolkit II, version 2.20 ([here](https://www.lingula.org.uk/~steve/share/ToolKit-II-Manual.pdf) is the manual for version 2.13)
 
 ## Function Keys
