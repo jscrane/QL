@@ -18,7 +18,6 @@ class sound_sink;
 class SoundAdapter: public Pollable {
 public:
 	using Params = BeepParams;
-	using Clock = std::function<uint32_t()>;    // microseconds
 
 	SoundAdapter(sound_sink &sound, Clock clock): _sound(sound), _clock(clock) {}
 
