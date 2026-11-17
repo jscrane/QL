@@ -33,19 +33,17 @@ Microdrive mdv;
 IO io(ipc, mdv);
 Screen screen;
 
-flash_filer images(PROGRAMS, 2);
-flash_file drive1(0), drive2(1);
+flash_device drive1("flp1", "img", readwrite), drive2("flp2", "img", readwrite);
+flash_filer images(PROGRAMS, drive1, drive2);
 QDisc floppy(drive1, drive2);
 
 bool debug_cpu = false;
 
 static void file_status() {
 
-	static const char *device_names[] = { "D1:", "D2:" };
 	const char *image = images.filename();
 	char buf[80];
-	strcpy(buf, device_names[images.device()]);
-	strcat(buf, image? image: "No image selected");
+	snprintf(buf, sizeof(buf), "%s:%s", images.current().name(), image? image: "No image selected");
 	screen.status(buf);
 }
 
@@ -56,7 +54,7 @@ static void function_keys(uint16_t key) {
 		machine.reset();
 		break;
 	case F7:
-		images.next_file("img", readwrite);
+		images.advance();
 		break;
 	case F8:
 		images.rewind();
