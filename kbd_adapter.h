@@ -6,7 +6,7 @@ class KeyboardAdapter: private fnkey_kbd {
 public:
 	KeyboardAdapter(keyboard &kbd): fnkey_kbd(kbd) {}
 
-	using fnkey_kbd::reset;
+	void reset();
 
 	using fnkey_kbd::register_fnkey_handler;
 
