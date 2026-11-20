@@ -38,9 +38,9 @@ The `roms/` directory contains some original images downloaded from [here](https
 
 The emulator uses:
 - `F6` to reset the machine
-- `F7` to advance to next image
-- `Ctrl-F7` to rewind to first image
-- `F8` to select device for image
+- `F7` to select device for image
+- `F8` to advance to next image on device
+- `Ctrl-F8` to rewind to first image on device
 - `F9` update last checkpoint
 - `Shift-F9` create new checkpoint
 - `F10` restore selected checkpoint
