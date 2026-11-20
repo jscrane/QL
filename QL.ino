@@ -3,6 +3,7 @@
 #include <dram.h>
 #include <fnkey_kbd.h>
 #include <flash_filer.h>
+#include <debugging.h>
 
 #include "kbd_adapter.h"
 #include "snd_adapter.h"
@@ -49,6 +50,7 @@ static void file_status() {
 
 static void function_keys(uint16_t key) {
 
+	DBG_EMU("function: %x", key);
 	switch (key) {
 	case F6:
 		machine.reset();
@@ -56,10 +58,10 @@ static void function_keys(uint16_t key) {
 	case F7:
 		images.advance();
 		break;
-	case F8:
+	case F7 | keys::MOD_CTRL:
 		images.rewind();
 		break;
-	case F9:
+	case F8:
 		images.next_device();
 		break;
 	}
