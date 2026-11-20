@@ -83,3 +83,9 @@ uint16_t KeyboardAdapter::key_code() {
 	_avail = false;
 	return _code;
 }
+
+void KeyboardAdapter::reset() {
+	fnkey_kbd::reset();
+	_avail = false;
+	_code = 0xffff;
+}
