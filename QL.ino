@@ -67,7 +67,7 @@ static void function_keys(uint16_t key) {
 		break;
 	case F9:
 	case F9 | keys::MOD_SHIFT:
-		if (!chk.save(F9 & keys::MOD_SHIFT)) {
+		if (!chk.save(key & keys::MOD_SHIFT)) {
 			screen.status("Checkpoint failed");
 			return;
 		}
