@@ -103,7 +103,6 @@ void IO::begin() {
 }
 
 void IO::reset() {
-
 	_mdv.reset();
 	_ipc.reset();
 	_irq_status = _irq_mask = 0;
@@ -111,9 +110,15 @@ void IO::reset() {
 }
 
 void IO::checkpoint(Checkpoint &c) {
-	// FIXME
+	_ipc.checkpoint(c);
+	c.write(_irq_status);
+	c.write(_irq_mask);
+	c.write(_rtc);
 }
 
 void IO::restore(Checkpoint &c) {
-	// FIXME
+	_ipc.restore(c);
+	c.read(_irq_status);
+	c.read(_irq_mask);
+	c.read(_rtc);
 }

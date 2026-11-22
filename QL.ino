@@ -3,6 +3,8 @@
 #include <dram.h>
 #include <fnkey_kbd.h>
 #include <flash_filer.h>
+#include <checkpoint_device.h>
+#include <debugging.h>
 
 #include "kbd_adapter.h"
 #include "snd_adapter.h"
@@ -34,16 +36,17 @@ IO io(ipc, mdv);
 Screen screen;
 
 flash_device drive1("flp1", "img", readwrite), drive2("flp2", "img", readwrite);
-flash_filer images(PROGRAMS, drive1, drive2);
+checkpoint_device chk("chkpt");
+flash_filer files(PROGRAMS, drive1, drive2, chk);
 QDisc floppy(drive1, drive2);
 
-bool debug_cpu = false;
+static bool debug_cpu = false;
 
 static void file_status() {
 
-	const char *image = images.filename();
+	const char *image = files.filename();
 	char buf[80];
-	snprintf(buf, sizeof(buf), "%s:%s", images.current().name(), image? image: "No image selected");
+	snprintf(buf, sizeof(buf), "%s:%s", files.current().name(), image? image: "No image selected");
 	screen.status(buf);
 }
 
@@ -54,13 +57,26 @@ static void function_keys(uint16_t key) {
 		machine.reset();
 		break;
 	case F7:
-		images.advance();
+		files.next_device();
 		break;
 	case F8:
-		images.rewind();
+		files.advance();
+		break;
+	case F8 | keys::MOD_CTRL:
+		files.rewind();
 		break;
 	case F9:
-		images.next_device();
+	case F9 | keys::MOD_SHIFT:
+		if (!chk.save(key & keys::MOD_SHIFT)) {
+			screen.status("Checkpoint failed");
+			return;
+		}
+		break;
+	case F10:
+		if (chk.filename() && !chk.restore()) {
+			screen.status("Restore failed");
+			return;
+		}
 		break;
 	}
 	file_status();
@@ -70,12 +86,12 @@ static void reset(bool sd) {
 
 	if (!sd)
 		screen.status("No SD Card");
-	else if (!images.start())
+	else if (!files.start())
 		screen.status("Failed to open " PROGRAMS);
 
 	io.reset();
 	screen.reset();
-	images.reset();
+	files.reset();
 	floppy.reset();
 	debug_cpu = false;
 }
@@ -85,7 +101,7 @@ void setup() {
 	machine.begin();
 	user_ram.begin();
 	screen.begin();
-	keyboard.register_fnkey_handler(F6 | F7 | F8 | F9, function_keys);
+	keyboard.register_fnkey_handler(F6 | F7 | F8 | F9 | F10, function_keys);
 
 	io.set_display_ctrl([](uint8_t b) { screen.set_mode(b); });
 	io.set_interrupt_cpu([](bool b) { cpu.set_interrupt_level(b? 2: 0); });

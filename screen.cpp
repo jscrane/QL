@@ -139,5 +139,6 @@ void Screen::restore(Checkpoint &c) {
 	_ram.restore(c);
 	c.read(_mode4);
 	c.read(_screen2);
+	set_screen();
 	redraw();
 }

@@ -53,21 +53,23 @@ void IPC::receive_parameter_bit(bool bit) {
 	_params = (_params << 1) + bit;
 	if (--_param_bits == 0) {
 		state(Command);
-		(this->*_cmd_handler)(_params);
+		const command *c = find_command(_param_cmd);
+		if (c)
+			(this->*c->handler)(_params);
 	}
 }
 
-void IPC::expect_parameters(uint8_t nbits, void (IPC::*handler)(uint64_t)) {
+void IPC::expect_parameters(const struct command &c) {
 
-	if (nbits == 0) {
+	if (c.nbits == 0) {
 		state(Command);
-		(this->*handler)(0);
+		(this->*c.handler)(0);
 		return;
 	}
 
-	_param_bits = nbits;
+	_param_cmd = c.cmd;
+	_param_bits = c.nbits;
 	_params = 0;
-	_cmd_handler = handler;
 	state(Parameters);
 }
 
@@ -87,40 +89,32 @@ void IPC::begin_response(uint8_t nbits, uint16_t rsp) {
 	state(Response);
 }
 
+const IPC::command *IPC::find_command(uint8_t cmd) {
+
+	static const command commands[] = {
+		{ STATUS,		0,	&IPC::status },
+		{ READ_KEYBOARD,	0,	&IPC::read_keyboard },
+		{ READ_KEYBOARD_ROW,	4,	&IPC::read_kbd_row },
+		{ INIT_SOUND,		64,	&IPC::init_sound },
+		{ KILL_SOUND,		0,	&IPC::kill_sound },
+		{ SET_MDRS,		4,	&IPC::mdrs },
+		{ SET_BAUD_RATE,	4,	&IPC::set_baud_rate },
+		{ RANDOM,		0,	&IPC::random },
+		{ TEST,			8,	&IPC::test },
+	};
+	for (const auto &c: commands)
+		if (c.cmd == cmd)
+			return &c;
+	return nullptr;
+}
+
 void IPC::link_command(uint8_t cmd) {
 
-	switch (cmd) {
-	case STATUS:
-		expect_parameters(0, &IPC::status);
-		break;
-	case READ_KEYBOARD:
-		expect_parameters(0, &IPC::read_keyboard);
-		break;
-	case READ_KEYBOARD_ROW:
-		expect_parameters(4, &IPC::read_kbd_row);
-		break;
-	case INIT_SOUND:
-		expect_parameters(64, &IPC::init_sound);
-		break;
-	case KILL_SOUND:
-		expect_parameters(0, &IPC::kill_sound);
-		break;
-	case SET_MDRS:
-		expect_parameters(4, &IPC::mdrs);
-		break;
-	case SET_BAUD_RATE:
-		expect_parameters(4, &IPC::set_baud_rate);
-		break;
-	case RANDOM:
-		expect_parameters(0, &IPC::random);
-		break;
-	case TEST:
-		expect_parameters(8, &IPC::test);
-		break;
-	default:
+	const struct command *c = find_command(cmd);
+	if (c)
+		expect_parameters(*c);
+	else
 		DBG_EMU("unimplemented ipc command %02x", cmd);
-		break;
-	}
 }
 
 void IPC::status(uint64_t) {
@@ -203,10 +197,37 @@ void IPC::reset() {
 	_kbd.reset();
 	_snd.stop();
 
-	_cmd_handler = nullptr;
-	_cmd = _cmd_bits = _param_bits = 0;
+	_cmd = _cmd_bits = _param_cmd = _param_bits = 0;
 	_comdata = false;
 	_params = 0;
 	_rsp = _rsp_bit = 0;
 	state(Start);
+}
+
+void IPC::checkpoint(Checkpoint &c) {
+
+	c.write(_cmd);
+	c.write(_cmd_bits);
+	c.write(_param_cmd);
+	c.write(_param_bits);
+	c.write(_comdata);
+	c.write(_params);
+	c.write(_rsp);
+	c.write(_rsp_bit);
+	c.write((uint8_t)_ipc_state);
+}
+
+void IPC::restore(Checkpoint &c) {
+
+	c.read(_cmd);
+	c.read(_cmd_bits);
+	c.read(_param_cmd);
+	c.read(_param_bits);
+	c.read(_comdata);
+	c.read(_params);
+	c.read(_rsp);
+	c.read(_rsp_bit);
+	c.read((uint8_t&)_ipc_state);
+	_kbd.reset();
+	_snd.stop();
 }

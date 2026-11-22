@@ -4,6 +4,7 @@
 
 class KeyboardAdapter;
 class SoundAdapter;
+class Checkpoint;
 
 // bits in the reply to the STATUS command
 enum StatusBit : uint8_t {
@@ -22,18 +23,19 @@ public:
 	bool comdata() const { return _comdata; }
 	bool pending() const;
 
+	void checkpoint(Checkpoint &);
+	void restore(Checkpoint &);
 private:
 	void link_command(uint8_t);
 	void receive_command_bit(bool);
 	void receive_parameter_bit(bool);
-	void expect_parameters(uint8_t, void (IPC::*)(uint64_t));
 	void begin_response(uint8_t, uint16_t);
 	void send_next_response_bit();
 
 	KeyboardAdapter &_kbd;
 	SoundAdapter &_snd;
 
-	enum IPCState {
+	enum IPCState: uint8_t {
 		Start,
 		Command,
 		Parameters,
@@ -42,7 +44,7 @@ private:
 
 	inline void state(IPCState s) { _ipc_state = s; }
 
-	enum IPCCommand {
+	enum IPCCommand: uint8_t {
 		STATUS = 1,
 		READ_KEYBOARD = 8,
 		READ_KEYBOARD_ROW = 9,
@@ -55,7 +57,6 @@ private:
 	};
 
 	// handlers
-	void (IPC::*_cmd_handler)(uint64_t) = nullptr;
 	void status(uint64_t);
 	void read_keyboard(uint64_t);
 	void read_kbd_row(uint64_t);
@@ -66,7 +67,16 @@ private:
 	void random(uint64_t);
 	void test(uint64_t);
 
+	struct command {
+		uint8_t cmd;
+		uint8_t nbits;
+		void (IPC::*handler)(uint64_t);
+	};
+	static const command *find_command(uint8_t);
+	void expect_parameters(const command &);
+
 	uint8_t _cmd = 0, _cmd_bits = 0;
+	uint8_t _param_cmd = 0;
 	uint8_t _param_bits = 0;
 	uint64_t _params = 0;
 	bool _comdata = false;
